@@ -1,0 +1,80 @@
+# Install packages
+
+## Install mavros
+
+* Prerequisites
+```
+sudo apt-get install python-catkin-tools python-rosinstall-generator -y
+```
+
+* Create a catkin workspace for source installation
+```
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws
+catkin init
+wstool init sr
+````
+
+* If this is your first time using wstool you will need to initialize your source space with:
+```
+wstool init ~/catkin_ws/src
+```
+
+* Install MAVLink:
+```
+# We use the Kinetic reference for all ROS distros as it's not distro-specific and up to date
+rosinstall_generator --rosdistro kinetic mavlink | tee /tmp/mavros.rosinstall
+```
+
+* Install MAVROS from source using released/stable version
+```
+rosinstall_generator --upstream mavros | tee -a /tmp/mavros.rosinstall
+```
+
+* Create workspace & deps
+```
+wstool merge -t src /tmp/mavros.rosinstall
+wstool update -t src -j4
+rosdep install --from-paths src --ignore-src -y
+```
+
+* Install [GeographicLib](https://geographiclib.sourceforge.io) datasets:
+```
+# It might need sudo
+./src/mavros/mavros/scripts/install_geographiclib_datasets.sh
+```
+
+* Build source
+```
+cd ~/catkin_ws
+catkin build
+```
+
+* Make sure that you use setup.bash or setup.zsh from workspace
+```
+# Needed or rosrun can't find nodes from this workspace.
+source devel/setup.bash
+```
+In the case of error, there are addition installation and troubleshooting notes in the [mavros repo](https://github.com/mavlink/mavros/tree/master/mavros#installation).
+
+## Install PX4 firmware
+
+```
+mkdir -p ~/src
+cd ~/src
+git clone https://github.com/PX4/Firmware.git
+cd Firmware
+git submodule update --init --recursive
+make px4_sitl_default # it may ask for some installations using pip
+make px4_sitl_default gazebo
+make px4_sitl_default gazebo_rover
+```
+* it might need gstrem installation:
+```
+sudo apt-get install libgstreamer1.0-dev
+```
+
+* to list the possible simulations:
+```
+make px4_sitl list_vmd_make_targets
+```
