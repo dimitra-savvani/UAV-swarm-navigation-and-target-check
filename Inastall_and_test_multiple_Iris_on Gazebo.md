@@ -78,7 +78,7 @@ sudo apt-get install libgstreamer1.0-dev
 ```
 make px4_sitl list_vmd_make_targets
 ```
-* Run simulation
+* Run simulation for one Iris drone
 
 Simulate iris drone with mavros and px4
 Terminal 1:
@@ -107,3 +107,6 @@ source ~/catkin_ws/devel/setup.bash
 rosrun mavros mavcmd takeoffcur 0.1 0.1 0.2
 rosrun mavros mavsafety arm
 ```
+Kill all terminals
+
+
