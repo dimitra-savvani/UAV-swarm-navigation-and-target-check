@@ -78,3 +78,32 @@ sudo apt-get install libgstreamer1.0-dev
 ```
 make px4_sitl list_vmd_make_targets
 ```
+* Run simulation
+
+Simulate iris drone with mavros and px4
+Terminal 1:
+```
+cd ~/src/Firmware
+source ~/catkin_ws/devel/setup.bash
+roslaunch mavros px4.launch fcu_url:="udp://:14540@127.0.0.1:14557"
+```
+
+Terminal 2:
+```
+cd ~/src/Firmware
+DONT_RUN=1 make px4_sitl_default gazebo
+source ~/catkin_ws/devel/setup.bash
+source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/sitl_gazebo
+
+roslaunch px4 posix_sitl.launch
+```
+
+Terminal 3:
+```
+cd
+source ~/catkin_ws/devel/setup.bash
+rosrun mavros mavcmd takeoffcur 0.1 0.1 0.2
+rosrun mavros mavsafety arm
+```
