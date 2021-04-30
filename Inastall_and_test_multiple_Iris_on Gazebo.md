@@ -109,5 +109,25 @@ rosrun mavros mavsafety arm
 ```
 Kill all terminals
 
-##
-Download [files_for_mul_iris]
+Modifications to runn multiple Iris drones
+
+* Download [files_for_mul_iris](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/files_for_mul_Iris)
+
+* Paste .launch files under launch folder (which is under Firmware folder)
+
+* On a terminal:
+```
+cd ~/.ignition/fuel/
+sudo nano config.yaml
+```
+replace url line with →  url: https://api.ignitionrobotics.org
+
+* Paste sdf files (from sfds folder) under src/Firmware/Tools/sitl_gazebo/models/iris/
+
+* Run the following lines, in to seperate terminals, to launch multiple drones
+```
+cd ~/src/Firmware;source ~/catkin_ws/devel/setup.bash;source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default;export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd);export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/sitl_gazebo;roslaunch px4 simulation.launch
+
+cd ~/src/Firmware;source ~/catkin_ws/devel/setup.bash;source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default;export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd);export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/sitl_gazebo;roslaunch px4 add_sdf.launch
+
+```
