@@ -81,6 +81,7 @@ make px4_sitl list_vmd_make_targets
 ## Run simulation for one Iris drone
 
 Simulate iris drone with mavros and px4
+
 Terminal 1:
 ```
 cd ~/src/Firmware
@@ -99,6 +100,22 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/sitl_gazebo
 
 roslaunch px4 posix_sitl.launch
 ```
+(Alternatively, for commands on terminal 1 and 2)
+
+Downloads the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder, and place it wherever you want. Lets say it placed on Home folder.
+
+Now on terminal 1:
+```
+cd bashScripts
+bash one_launch1.sh
+```
+
+And on terminal 2:
+```
+cd bashScripts
+bash one_launch2.sh
+```
+Continue normally on Terminal 3
 
 Terminal 3:
 ```
@@ -107,9 +124,10 @@ source ~/catkin_ws/devel/setup.bash
 rosrun mavros mavcmd takeoffcur 0.1 0.1 0.2
 rosrun mavros mavsafety arm
 ```
+
 Kill all terminals
 
-Modifications to runn multiple Iris drones
+## Modifications to run multiple Iris drones
 
 * Download [files_for_mul_iris](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/files_for_mul_Iris)
 
@@ -124,10 +142,30 @@ replace url line with →  url: https://api.ignitionrobotics.org
 
 * Paste sdf files (from sfds folder) under src/Firmware/Tools/sitl_gazebo/models/iris/
 
-* Run the following lines, in to seperate terminals, to launch multiple drones
+* Run the following lines, in seperate terminals, to launch multiple drones
+
+Terminal 1:
 ```
 cd ~/src/Firmware;source ~/catkin_ws/devel/setup.bash;source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default;export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd);export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/sitl_gazebo;roslaunch px4 simulation.launch
+```
 
+Terminal 2:
+```
 cd ~/src/Firmware;source ~/catkin_ws/devel/setup.bash;source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default;export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd);export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/sitl_gazebo;roslaunch px4 add_sdf.launch
 
+```
+(Alternatively, for commands on terminal 1 and 2)
+
+Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described above.
+
+On Terminal 1:
+```
+cd bashScripts
+bash mul_launch1.sh
+```
+
+On Terminal 2:
+```
+cd bashScripts
+bash mul_launch2.sh
 ```
