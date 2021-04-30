@@ -109,6 +109,7 @@ Now on terminal 1:
 cd bashScripts
 bash one_launch1.sh
 ```
+(the first time you run `one_launch2.sh`, uncomment `#DONT_RUN=1 make px4_sitl_default gazebo`, then comment it out again for the future runs)
 
 And on terminal 2:
 ```
