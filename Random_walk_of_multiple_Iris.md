@@ -47,5 +47,6 @@ On a third terminal:
 
 ```
 source ~/catkin_ws/devel/setup.bash
-rosrun motion 
+rosrun motion rand_walks <number>
 ```
+number could be any integer from 0 to 8.
