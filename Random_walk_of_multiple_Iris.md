@@ -29,6 +29,7 @@ catkin build
 
 Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris_on Gazebo.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Inastall_and_test_multiple_Iris_on%20Gazebo.md).
 
+
 On a terminal:
 
 ```
@@ -45,8 +46,16 @@ bash mul_launch2.sh
 
 On a third terminal:
 
+* To run rand_walks node for specific drone:
+
 ```
 source ~/catkin_ws/devel/setup.bash
 rosrun motion rand_walks <number>
 ```
-number could be any integer from 0 to 8.
+number could be any integer from 0 to 7.
+
+* or to run rand_walks node for all drones simultaneously: 
+```
+cd bashScripts
+bash rand_walks.sh
+```
