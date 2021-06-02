@@ -52,10 +52,16 @@ On a third terminal:
 source ~/catkin_ws/devel/setup.bash
 rosrun motion rand_walks <number>
 ```
-number could be any integer from 0 to 7.
+number could be any integer from 0 to 4.
 
 * or to run rand_walks node for all drones simultaneously: 
 ```
 cd bashScripts
 bash rand_walks.sh
+```
+## plot random walks for drone 0 to 4
+
+```
+cd bashScripts
+bash plots.sh
 ```
