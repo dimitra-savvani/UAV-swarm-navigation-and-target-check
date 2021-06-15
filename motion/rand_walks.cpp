@@ -16,13 +16,14 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
 
-geometry_msgs::PoseStamped current_position;
+geometry_msgs::PoseStamped current_position; // for comparing current position(local) to wanted goal location(local)
 void position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
     current_position = *msg;
 }
 
-geometry_msgs::PoseStamped pose;
-void give_target(){
+geometry_msgs::PoseStamped pose; // for setting wanted goal location (local coordinates) 
+geometry_msgs::PoseStamped global_pose; // for ploting goal positions at plot.py
+void give_target(string ID){
     /* cout << "dose x:" << endl;
     cin >> pose.pose.position.x;
     cout << "dose y:" << endl;
@@ -33,25 +34,47 @@ void give_target(){
     pose.pose.position.x = rand() % 30;
     pose.pose.position.y = rand() % 30;
     pose.pose.position.z = rand() % 5 + 1;
-    ROS_INFO("%f\n%f\n%f\n", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+
+    global_pose.pose.position.x = pose.pose.position.x;
+    global_pose.pose.position.y = pose.pose.position.y;
+
+    if (ID == "0"){
+        global_pose.pose.position.x = global_pose.pose.position.x + 30;
+    }
+    else if (ID == "1"){
+        global_pose.pose.position.x = global_pose.pose.position.x - 30;
+    }
+    else if (ID == "2"){
+        global_pose.pose.position.y = global_pose.pose.position.y + 30;
+    }
+    else if (ID == "3"){
+        global_pose.pose.position.y = global_pose.pose.position.y - 30;
+    }
+    else if (ID == "4"){
+        global_pose.pose.position.x = global_pose.pose.position.x + 31;
+    }
+
+    
+
+    ROS_INFO("%f\n%f\n%f\n", global_pose.pose.position.x, global_pose.pose.position.y, pose.pose.position.z);
 }
 
 int main(int argc, char **argv)
 {
     srand (time(NULL));
     string ID = argv[1];
-    //string ID = to_string(0);
     ros::init(argc, argv, "uav" + ID);
     ros::NodeHandle nh;
     string uav = "uav" + ID;
     
-    //cout << uav << endl;
+
 
     /* We instantiate a publisher to publish the commanded local position and the appropriate clients to request 
     arming and mode change. Note that for your own system, the "mavros" prefix might be different as it will 
     depend on the name given to the node in it's launch file. */
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>(uav + "/mavros/state", 10, state_cb);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/local", 10);
+    ros::Publisher global_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/global", 10);
     ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, position_cb);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>(uav + "/mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>(uav + "/mavros/set_mode");
@@ -74,7 +97,7 @@ int main(int argc, char **argv)
 
     /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
     coordinates to the standard ENU frame and vice-versa. This is why we set z to positive 2. */
-    give_target();
+    give_target(ID);
 
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
@@ -113,12 +136,13 @@ int main(int argc, char **argv)
         }
 
         local_pos_pub.publish(pose);
+        global_pos_pub.publish(global_pose);
 
 
         if(abs(pose.pose.position.x - current_position.pose.position.x)<0.1){
             if(abs(pose.pose.position.y - current_position.pose.position.y)<0.1){
                 if(abs(pose.pose.position.z - current_position.pose.position.z)<0.1){
-                    //give_target();
+                    //give_target(ID);
                     pose.pose.position.x = pose.pose.position.x;
                     pose.pose.position.y = pose.pose.position.y;
                     pose.pose.position.z = pose.pose.position.z;
