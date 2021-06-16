@@ -17,7 +17,7 @@ target_link_libraries(rand_walks ${catkin_LIBRARIES})
 
 ## Add and compile rand_walks.cpp file to your motion package:
 
-* Download [rand_walks.cpp]() and place it under src/motion/src of your catkin workspace
+* Download [rand_walks.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/rand_walks.cpp) and place it under src/motion/src of your catkin workspace
 
 * On  a terminal run
 ```
@@ -61,6 +61,12 @@ bash rand_walks.sh
 ```
 ## plot random walks for drone 0 to 4
 
+* Download [plot.py](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/plot.py) and place it under src/motion/src of your catkin workspace
+(don 't forget to change permissions in properties in order to make it executable)
+
+Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris_on Gazebo.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Inastall_and_test_multiple_Iris_on%20Gazebo.md).
+
+On a terminal run: 
 ```
 cd bashScripts
 bash plots.sh
