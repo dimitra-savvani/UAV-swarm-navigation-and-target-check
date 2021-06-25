@@ -13,6 +13,7 @@ At the end of the `CMakeList.txt` (which is under the src/motion folder of your 
 ```
 add_executable(rand_walks src/rand_walks.cpp)
 target_link_libraries(rand_walks ${catkin_LIBRARIES})
+#add_dependencies(rand_walks  motion_generate_messages_cpp)
 ```
 
 ## Add and compile rand_walks.cpp file to your motion package:
