@@ -1,8 +1,8 @@
 # Multiple Iris, navigate with D* algorithm, avoid each other and check if detected smoke corresponds to fire.
 
 ## Prerequisites
-Follow instructions on [Inastall_and_test_multiple_Iris_on Gazebo.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Inastall_and_test_multiple_Iris_on%20Gazebo.md)
-Then follow instructions on [ROS_multiple_iris](https://github.com/dimitra-savvani/ROS_multiple_iris/edit/main/Random_walk_of_multiple_Iris.md)
+Follow instructions on [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)
+Then follow instructions on [Random_walk_with_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Random_walk_with_multiple_Iris.md)
 
 ## Add and compile operator.cpp file to your motion package:
 
