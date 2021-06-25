@@ -12,6 +12,7 @@ At the end of the `CMakeList.txt` (which is under the src/motion folder of your 
 ```
 add_executable(operator src/operator.cpp)
 target_link_libraries(operator ${catkin_LIBRARIES})
+#add_dependencies(operator  motion_generate_messages_cpp)
 ```
 
 * Download [operator.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/operator.cpp) and place it under src/motion/src of your catkin workspace
