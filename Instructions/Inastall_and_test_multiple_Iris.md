@@ -132,7 +132,7 @@ Kill all terminals
 
 * Download [files_for_mul_iris](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/files_for_mul_Iris)
 
-* Paste .launch files under launch folder (which is under Firmware folder)
+* Paste .launch files under launch folder (which is under src/Firmware folder)
 
 * On a terminal:
 ```
