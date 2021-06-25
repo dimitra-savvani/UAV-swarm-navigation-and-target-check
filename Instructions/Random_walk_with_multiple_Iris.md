@@ -28,7 +28,7 @@ catkin build
 
 ## Execute random walks with Iris drones on Gazebo
 
-Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris_on Gazebo.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Inastall_and_test_multiple_Iris_on%20Gazebo.md).
+Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md).
 
 
 On a terminal:
@@ -65,7 +65,7 @@ bash rand_walks.sh
 * Download [plot.py](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/plot.py) and place it under src/motion/src of your catkin workspace
 (don 't forget to change permissions in properties in order to make it executable)
 
-Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris_on Gazebo.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Inastall_and_test_multiple_Iris_on%20Gazebo.md).
+Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md).
 
 On a terminal run: 
 ```
