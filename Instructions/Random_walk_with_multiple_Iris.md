@@ -65,7 +65,7 @@ If y
 
 ## plot random walks for drone 0 to 3
 
-* Plot node plots dynamically a drones path and its goal locations, so it is a prerequisite to have one or more drones executing rand_walks node. 
+* Plot node plots dynamically a drone 's path and its goal locations, so it is a prerequisite to have one or more drones executing rand_walks node. 
 
 * Download [plot.py](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/plot.py) and place it under src/motion/src of your catkin workspace
 (don 't forget to change permissions in properties in order to make it executable)
