@@ -105,7 +105,7 @@
         </include>
     </group>
 
-    <group ns="uav4">
+    <!-- <group ns="uav4">
         <arg name="ID" value="4"/>
         <arg name="fcu_url" default="udp://:14544@localhost:14584"/>
         <include file="$(find px4)/launch/single_sdf.launch">
@@ -127,8 +127,8 @@
             <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
             <arg name="tgt_component" value="1"/>
         </include>
-    </group>
-    <group ns="uav5">
+    </group> -->
+    <!-- <group ns="uav5">
         <arg name="ID" value="5"/>
         <arg name="fcu_url" default="udp://:14545@localhost:14585"/>
         <include file="$(find px4)/launch/single_sdf.launch">
@@ -196,7 +196,7 @@
             <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
             <arg name="tgt_component" value="1"/>
         </include>
-    </group> 
+    </group>  -->
    <!-- <group ns="uav8">
         <arg name="ID" value="8"/>
         <arg name="fcu_url" default="udp://:14548@192.168.1.5:14588"/>
@@ -479,3 +479,4 @@ Increase the id
 Change the name space
 Set the FCU to default="udp://:14540+id@localhost:14550+id"
 Set the malink_udp_port to 14560+id) -->
+
