@@ -1,7 +1,7 @@
 # Launch multiple Iris, let them do  a random walk
 
 ## Prerequisites
-Follow instructions on [Inastall_and_test_multiple_Iris_on Gazebo.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Inastall_and_test_multiple_Iris_on%20Gazebo.md)
+Follow instructions on [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)
 
 ## Create a package named motion
 ```
