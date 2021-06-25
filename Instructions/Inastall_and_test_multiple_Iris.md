@@ -134,6 +134,8 @@ Kill all terminals
 
 * Paste .launch files under launch folder (which is under src/Firmware folder)
 
+*To control how many drones you want to be launched, when you launch multiple drones, comment or uncomment coresponding code lines on add_sdf.launch (if you need more than 10 drones, you have to add some sdf files as well.)
+
 * On a terminal:
 ```
 cd ~/.ignition/fuel/
