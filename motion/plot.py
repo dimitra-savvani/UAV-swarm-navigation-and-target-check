@@ -160,15 +160,15 @@ def animate(i, ID):
     global i_goal
     
     if ID == "0" :
-        x_pos = x_pos + 30
+        x_pos = x_pos + 15
     elif ID == "1":
-        x_pos = x_pos - 30
+        x_pos = x_pos - 15
     elif ID == "2":
-        y_pos = y_pos + 30
+        y_pos = y_pos + 15
     elif ID == "3":
-        y_pos = y_pos - 30
-    elif ID == "4":
-        x_pos = x_pos + 31
+        y_pos = y_pos - 15
+    # elif ID == "4":
+    #     x_pos = x_pos + 31
 
 
     if flag_pos != 0:
