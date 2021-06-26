@@ -12,7 +12,7 @@
         <arg name="ID" value="0"/>
         <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
         <include file="$(find px4)/launch/single_sdf.launch">
-            <arg name="x" value="30"/>
+            <arg name="x" value="15"/>
             <arg name="y" value="0"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
@@ -37,7 +37,7 @@
         <arg name="ID" value="1"/>
         <arg name="fcu_url" default="udp://:14541@localhost:14581"/>
         <include file="$(find px4)/launch/single_sdf.launch">
-            <arg name="x" value="-30"/>
+            <arg name="x" value="-15"/>
             <arg name="y" value="0"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
@@ -62,7 +62,7 @@
         <arg name="fcu_url" default="udp://:14542@localhost:14582"/>
         <include file="$(find px4)/launch/single_sdf.launch">
             <arg name="x" value="0"/>
-            <arg name="y" value="30"/>
+            <arg name="y" value="15"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>
@@ -86,7 +86,7 @@
         <arg name="fcu_url" default="udp://:14543@localhost:14583"/>
         <include file="$(find px4)/launch/single_sdf.launch">
             <arg name="x" value="0"/>
-            <arg name="y" value="-30"/>
+            <arg name="y" value="-15"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>
