@@ -1,6 +1,7 @@
 import heapq
 import pygame
 
+
 from graph import Node, Graph
 from grid import GridWorld
 from utils import stateNameToCoords
@@ -15,19 +16,14 @@ GRAY1 = (145, 145, 102)
 GRAY2 = (77, 77, 51)
 BLUE = (0, 0, 80)
 
-colors = {
-    0: WHITE,
-    1: GREEN,
-    -1: GRAY1,
-    -2: GRAY2
-}
+colors = { 0: WHITE, 1: GREEN, -1: GRAY1, -2: GRAY2 }
 
 # This sets the WIDTH and HEIGHT of each grid location
-WIDTH = 20
-HEIGHT = 20
+WIDTH = 15
+HEIGHT = 15
 
 # This sets the margin between each cell
-MARGIN = 3
+MARGIN = 1
 
 # Create a 2 dimensional array. A two dimensional
 # array is simply a list of lists.
@@ -48,7 +44,7 @@ pygame.init()
 
 X_DIM = 50
 Y_DIM = 50
-VIEWING_RANGE = 2
+VIEWING_RANGE = 3
 
 
 # Set the HEIGHT and WIDTH of the screen
@@ -67,11 +63,14 @@ clock = pygame.time.Clock()
 
 if __name__ == "__main__":
     graph = GridWorld(X_DIM, Y_DIM)
-    s_start = 'x1y2'
-    s_goal = 'x5y4'
+    s_start = 'x40y25'
+    # s1_start = 'x10y25'
+    # s2_start = 'x25y40'
+    # s3_start = 'x25y10'
+    s_goal = 'x25y25'
     goal_coords = stateNameToCoords(s_goal)
 
-    graph.setStart(s_start)
+    graph.setStart(s_start,)
     graph.setGoal(s_goal)
     k_m = 0
     s_last = s_start
@@ -82,7 +81,7 @@ if __name__ == "__main__":
     s_current = s_start
     pos_coords = stateNameToCoords(s_current)
 
-    basicfont = pygame.font.SysFont('Comic Sans MS', 36)
+    basicfont = pygame.font.SysFont('Comic Sans MS', 16)
 
     # -------- Main Program Loop -----------
     while not done:
@@ -129,27 +128,23 @@ if __name__ == "__main__":
                     # text = basicfont.render(
                     # str(graph.graph[node_name].g), True, (0, 0, 200), (255,
                     # 255, 255))
-                    text = basicfont.render(
-                        str(graph.graph[node_name].g), True, (0, 0, 200))
+                    text = basicfont.render(str(graph.graph[node_name].g), True, (0, 0, 200))
                     textrect = text.get_rect()
-                    textrect.centerx = int(
-                        column * (WIDTH + MARGIN) + WIDTH / 2) + MARGIN
-                    textrect.centery = int(
-                        row * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN
+                    textrect.centerx = int(column * (WIDTH + MARGIN) + WIDTH / 2) + MARGIN
+                    textrect.centery = int(row * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN
                     screen.blit(text, textrect)
 
         # fill in goal cell with GREEN
-        pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * goal_coords[0] + MARGIN,
-                                         (MARGIN + HEIGHT) * goal_coords[1] + MARGIN, WIDTH, HEIGHT])
+        pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * goal_coords[0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * goal_coords[1] + MARGIN - WIDTH / 4, WIDTH / 2, HEIGHT / 2])
         # print('drawing robot pos_coords: ', pos_coords)
         # draw moving robot, based on pos_coords
-        robot_center = [int(pos_coords[0] * (WIDTH + MARGIN) + WIDTH / 2) +
-                        MARGIN, int(pos_coords[1] * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN]
-        pygame.draw.circle(screen, RED, robot_center, int(WIDTH / 4) - 2)
+        # robot_center = [int(pos_coords[0] * (WIDTH + MARGIN) + WIDTH / 2) +  MARGIN, int(pos_coords[1] * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN] # drone appears at the center of a square
+        robot_center = [int(pos_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
+        
+        pygame.draw.circle(screen, RED, robot_center, int(WIDTH / 3) - 2)
 
         # draw robot viewing range
-        pygame.draw.rect(
-            screen, BLUE, [robot_center[0] - VIEWING_RANGE * (WIDTH + MARGIN), robot_center[1] - VIEWING_RANGE * (HEIGHT + MARGIN), 2 * VIEWING_RANGE * (WIDTH + MARGIN), 2 * VIEWING_RANGE * (HEIGHT + MARGIN)], 2)
+        pygame.draw.rect(screen, BLUE, [robot_center[0] - VIEWING_RANGE * (WIDTH + MARGIN), robot_center[1] - VIEWING_RANGE * (HEIGHT + MARGIN), 2 * VIEWING_RANGE * (WIDTH + MARGIN), 2 * VIEWING_RANGE * (HEIGHT + MARGIN)], 2)
 
         # Limit to 60 frames per second
         clock.tick(20)
