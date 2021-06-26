@@ -39,20 +39,20 @@ void give_target(string ID){
     global_pose.pose.position.y = pose.pose.position.y;
 
     if (ID == "0"){
-        global_pose.pose.position.x = global_pose.pose.position.x + 30;
+        global_pose.pose.position.x = global_pose.pose.position.x + 15;
     }
     else if (ID == "1"){
-        global_pose.pose.position.x = global_pose.pose.position.x - 30;
+        global_pose.pose.position.x = global_pose.pose.position.x - 15;
     }
     else if (ID == "2"){
-        global_pose.pose.position.y = global_pose.pose.position.y + 30;
+        global_pose.pose.position.y = global_pose.pose.position.y + 15;
     }
     else if (ID == "3"){
-        global_pose.pose.position.y = global_pose.pose.position.y - 30;
+        global_pose.pose.position.y = global_pose.pose.position.y - 15;
     }
-    else if (ID == "4"){
-        global_pose.pose.position.x = global_pose.pose.position.x + 31;
-    }
+    // else if (ID == "4"){
+    //     global_pose.pose.position.x = global_pose.pose.position.x + 31;
+    // }
 
     
 
@@ -156,3 +156,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
+
