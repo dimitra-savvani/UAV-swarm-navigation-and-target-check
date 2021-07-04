@@ -10,8 +10,11 @@ from d_star_lite import initDStarLite, moveAndRescan
 # Define some colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
+GREEN = (0, 220, 0)
 RED = (255, 0, 0)
+ORANGE= (255, 100, 100)
+LIGHTBLUE= (60, 150, 255)
+LIGHTPURPLE= (153, 30, 153)
 GRAY1 = (145, 145, 102)
 GRAY2 = (77, 77, 51)
 BLUE = (0, 0, 80)
@@ -57,29 +60,56 @@ pygame.display.set_caption("D* Lite Path Planning")
 
 # Loop until the user clicks the close button.
 done = False
+done0 = False
+done1 = False
+done2 = False
+done3 = False
 
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
 
 if __name__ == "__main__":
     graph = GridWorld(X_DIM, Y_DIM)
-    s_start = 'x40y25'
-    # s1_start = 'x10y25'
-    # s2_start = 'x25y40'
-    # s3_start = 'x25y10'
+    s0_start = 'x40y25'
+    s1_start = 'x10y25'
+    s2_start = 'x25y40'
+    s3_start = 'x25y10'
     s_goal = 'x25y25'
     goal_coords = stateNameToCoords(s_goal)
 
-    graph.setStart(s_start,)
+    graph.setStart(s0_start,)
+    graph.setStart(s1_start,)
+    graph.setStart(s2_start,)
+    graph.setStart(s3_start,)
+    
     graph.setGoal(s_goal)
-    k_m = 0
-    s_last = s_start
-    queue = []
+    k_m0 = 0
+    k_m1 = 0
+    k_m2 = 0
+    k_m3 = 0
+    s0_last = s0_start
+    s1_last = s1_start
+    s2_last = s2_start
+    s3_last = s3_start
+    queue0 = []
+    queue1 = []
+    queue2 = []
+    queue3 = []
 
-    graph, queue, k_m = initDStarLite(graph, queue, s_start, s_goal, k_m)
+    graph, queue0, k_m0 = initDStarLite(graph, queue0, s0_start, s_goal, k_m0)
+    graph, queue1, k_m1 = initDStarLite(graph, queue1, s1_start, s_goal, k_m1)
+    graph, queue2, k_m2 = initDStarLite(graph, queue2, s2_start, s_goal, k_m2)
+    graph, queue3, k_m3 = initDStarLite(graph, queue3, s3_start, s_goal, k_m3)
 
-    s_current = s_start
-    pos_coords = stateNameToCoords(s_current)
+    s0_current = s0_start
+    s1_current = s1_start
+    s2_current = s2_start
+    s3_current = s3_start
+
+    pos0_coords = stateNameToCoords(s0_current)
+    pos1_coords = stateNameToCoords(s1_current)
+    pos2_coords = stateNameToCoords(s2_current)
+    pos3_coords = stateNameToCoords(s3_current)
 
     basicfont = pygame.font.SysFont('Comic Sans MS', 16)
 
@@ -88,18 +118,49 @@ if __name__ == "__main__":
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
                 done = True  # Flag that we are done so we exit this loop
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
                 # print('space bar! call next action')
-                s_new, k_m = moveAndRescan(
-                    graph, queue, s_current, VIEWING_RANGE, k_m)
-                if s_new == 'goal':
-                    print('Goal Reached!')
-                    done = True
+                s0_new, k_m0 = moveAndRescan(graph, queue0, s0_current, VIEWING_RANGE, k_m0)  
+                if s0_new == 'goal':
+                    print('Goal Reached! uav0')
+                    done0 = True
                 else:
                     # print('setting s_current to ', s_new)
-                    s_current = s_new
-                    pos_coords = stateNameToCoords(s_current)
+                    s0_current = s0_new
+                    pos0_coords = stateNameToCoords(s0_current)
                     # print('got pos coords: ', pos_coords)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                s1_new, k_m1 = moveAndRescan(graph, queue1, s1_current, VIEWING_RANGE, k_m1)
+                if s1_new == 'goal':
+                    print('Goal Reached! uav1')
+                    done1 = True
+                else:
+                    # print('setting s_current to ', s_new)
+                    s1_current = s1_new
+                    pos1_coords = stateNameToCoords(s1_current)
+                    # print('got pos coords: ', pos_coords)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                s2_new, k_m2 = moveAndRescan(graph, queue2, s2_current, VIEWING_RANGE, k_m2)
+                if s2_new == 'goal':
+                    print('Goal Reached! uav2')
+                    done2 = True
+                else:
+                    # print('setting s_current to ', s_new)
+                    s2_current = s2_new
+                    pos2_coords = stateNameToCoords(s2_current)
+                    # print('got pos coords: ', pos_coords)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                s3_new, k_m3 = moveAndRescan(graph, queue3, s3_current, VIEWING_RANGE, k_m3)
+                if s3_new == 'goal':
+                    print('Goal Reached! uav3')
+                    done3 = True
+                else:
+                    # print('setting s_current to ', s_new)
+                    s3_current = s3_new
+                    pos3_coords = stateNameToCoords(s3_current)
+                    # print('got pos coords: ', pos_coords)
+            if done0 and done1 and done2 and done3:
+                    done = True
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 # User clicks the mouse. Get the position
@@ -128,7 +189,7 @@ if __name__ == "__main__":
                     # text = basicfont.render(
                     # str(graph.graph[node_name].g), True, (0, 0, 200), (255,
                     # 255, 255))
-                    text = basicfont.render(str(graph.graph[node_name].g), True, (0, 0, 200))
+                    text = basicfont.render(str(graph.graph[node_name].g), True, (0, 200, 0))
                     textrect = text.get_rect()
                     textrect.centerx = int(column * (WIDTH + MARGIN) + WIDTH / 2) + MARGIN
                     textrect.centery = int(row * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN
@@ -139,12 +200,22 @@ if __name__ == "__main__":
         # print('drawing robot pos_coords: ', pos_coords)
         # draw moving robot, based on pos_coords
         # robot_center = [int(pos_coords[0] * (WIDTH + MARGIN) + WIDTH / 2) +  MARGIN, int(pos_coords[1] * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN] # drone appears at the center of a square
-        robot_center = [int(pos_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
+        robot0_center = [int(pos0_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos0_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
+        robot1_center = [int(pos1_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos1_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
+        robot2_center = [int(pos2_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos2_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
+        robot3_center = [int(pos3_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos3_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
+
+        pygame.draw.circle(screen, RED, robot0_center, int(WIDTH / 3) - 2)
+        pygame.draw.circle(screen, ORANGE, robot1_center, int(WIDTH / 3) - 2)
+        pygame.draw.circle(screen, LIGHTBLUE, robot2_center, int(WIDTH / 3) - 2)
+        pygame.draw.circle(screen, LIGHTPURPLE, robot3_center, int(WIDTH / 3) - 2)
         
-        pygame.draw.circle(screen, RED, robot_center, int(WIDTH / 3) - 2)
 
         # draw robot viewing range
-        pygame.draw.rect(screen, BLUE, [robot_center[0] - VIEWING_RANGE * (WIDTH + MARGIN), robot_center[1] - VIEWING_RANGE * (HEIGHT + MARGIN), 2 * VIEWING_RANGE * (WIDTH + MARGIN), 2 * VIEWING_RANGE * (HEIGHT + MARGIN)], 2)
+        pygame.draw.rect(screen, BLUE, [robot0_center[0] - VIEWING_RANGE * (WIDTH + MARGIN), robot0_center[1] - VIEWING_RANGE * (HEIGHT + MARGIN), 2 * VIEWING_RANGE * (WIDTH + MARGIN), 2 * VIEWING_RANGE * (HEIGHT + MARGIN)], 2)
+        pygame.draw.rect(screen, BLUE, [robot1_center[0] - VIEWING_RANGE * (WIDTH + MARGIN), robot1_center[1] - VIEWING_RANGE * (HEIGHT + MARGIN), 2 * VIEWING_RANGE * (WIDTH + MARGIN), 2 * VIEWING_RANGE * (HEIGHT + MARGIN)], 2)
+        pygame.draw.rect(screen, BLUE, [robot2_center[0] - VIEWING_RANGE * (WIDTH + MARGIN), robot2_center[1] - VIEWING_RANGE * (HEIGHT + MARGIN), 2 * VIEWING_RANGE * (WIDTH + MARGIN), 2 * VIEWING_RANGE * (HEIGHT + MARGIN)], 2)
+        pygame.draw.rect(screen, BLUE, [robot3_center[0] - VIEWING_RANGE * (WIDTH + MARGIN), robot3_center[1] - VIEWING_RANGE * (HEIGHT + MARGIN), 2 * VIEWING_RANGE * (WIDTH + MARGIN), 2 * VIEWING_RANGE * (HEIGHT + MARGIN)], 2)
 
         # Limit to 60 frames per second
         clock.tick(20)
