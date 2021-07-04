@@ -7,6 +7,12 @@ from grid import GridWorld
 from utils import stateNameToCoords
 from d_star_lite import initDStarLite, moveAndRescan
 
+# Callbacks
+
+
+
+
+
 # Define some colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -69,7 +75,10 @@ done3 = False
 clock = pygame.time.Clock()
 
 if __name__ == "__main__":
-    graph = GridWorld(X_DIM, Y_DIM)
+    graph0 = GridWorld(X_DIM, Y_DIM)
+    graph1 = GridWorld(X_DIM, Y_DIM)
+    graph2 = GridWorld(X_DIM, Y_DIM)
+    graph3 = GridWorld(X_DIM, Y_DIM)
     s0_start = 'x40y25'
     s1_start = 'x10y25'
     s2_start = 'x25y40'
@@ -77,12 +86,15 @@ if __name__ == "__main__":
     s_goal = 'x25y25'
     goal_coords = stateNameToCoords(s_goal)
 
-    graph.setStart(s0_start,)
-    graph.setStart(s1_start,)
-    graph.setStart(s2_start,)
-    graph.setStart(s3_start,)
+    graph0.setStart(s0_start,)
+    graph1.setStart(s1_start,)
+    graph2.setStart(s2_start,)
+    graph3.setStart(s3_start,)
     
-    graph.setGoal(s_goal)
+    graph0.setGoal(s_goal)
+    graph1.setGoal(s_goal)
+    graph2.setGoal(s_goal)
+    graph3.setGoal(s_goal)
     k_m0 = 0
     k_m1 = 0
     k_m2 = 0
@@ -96,10 +108,10 @@ if __name__ == "__main__":
     queue2 = []
     queue3 = []
 
-    graph, queue0, k_m0 = initDStarLite(graph, queue0, s0_start, s_goal, k_m0)
-    graph, queue1, k_m1 = initDStarLite(graph, queue1, s1_start, s_goal, k_m1)
-    graph, queue2, k_m2 = initDStarLite(graph, queue2, s2_start, s_goal, k_m2)
-    graph, queue3, k_m3 = initDStarLite(graph, queue3, s3_start, s_goal, k_m3)
+    graph0, queue0, k_m0 = initDStarLite(graph0, queue0, s0_start, s_goal, k_m0)
+    graph1, queue1, k_m1 = initDStarLite(graph1, queue1, s1_start, s_goal, k_m1)
+    graph2, queue2, k_m2 = initDStarLite(graph2, queue2, s2_start, s_goal, k_m2)
+    graph3, queue3, k_m3 = initDStarLite(graph3, queue3, s3_start, s_goal, k_m3)
 
     s0_current = s0_start
     s1_current = s1_start
@@ -116,11 +128,11 @@ if __name__ == "__main__":
     # -------- Main Program Loop -----------
     while not done:
         for event in pygame.event.get():  # User did something
-            if event.type == pygame.QUIT:  # If user clicked close
+            if event.type == pygame.QUIT:  # If user `cliked close
                 done = True  # Flag that we are done so we exit this loop
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
                 # print('space bar! call next action')
-                s0_new, k_m0 = moveAndRescan(graph, queue0, s0_current, VIEWING_RANGE, k_m0)  
+                s0_new, k_m0 = moveAndRescan(graph0, queue0, s0_current, VIEWING_RANGE, k_m0)  
                 if s0_new == 'goal':
                     print('Goal Reached! uav0')
                     done0 = True
@@ -130,7 +142,7 @@ if __name__ == "__main__":
                     pos0_coords = stateNameToCoords(s0_current)
                     # print('got pos coords: ', pos_coords)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                s1_new, k_m1 = moveAndRescan(graph, queue1, s1_current, VIEWING_RANGE, k_m1)
+                s1_new, k_m1 = moveAndRescan(graph1, queue1, s1_current, VIEWING_RANGE, k_m1)
                 if s1_new == 'goal':
                     print('Goal Reached! uav1')
                     done1 = True
@@ -140,7 +152,7 @@ if __name__ == "__main__":
                     pos1_coords = stateNameToCoords(s1_current)
                     # print('got pos coords: ', pos_coords)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                s2_new, k_m2 = moveAndRescan(graph, queue2, s2_current, VIEWING_RANGE, k_m2)
+                s2_new, k_m2 = moveAndRescan(graph2, queue2, s2_current, VIEWING_RANGE, k_m2)
                 if s2_new == 'goal':
                     print('Goal Reached! uav2')
                     done2 = True
@@ -150,7 +162,7 @@ if __name__ == "__main__":
                     pos2_coords = stateNameToCoords(s2_current)
                     # print('got pos coords: ', pos_coords)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                s3_new, k_m3 = moveAndRescan(graph, queue3, s3_current, VIEWING_RANGE, k_m3)
+                s3_new, k_m3 = moveAndRescan(graph3, queue3, s3_current, VIEWING_RANGE, k_m3)
                 if s3_new == 'goal':
                     print('Goal Reached! uav3')
                     done3 = True
@@ -169,8 +181,14 @@ if __name__ == "__main__":
                 column = pos[0] // (WIDTH + MARGIN)
                 row = pos[1] // (HEIGHT + MARGIN)
                 # Set that location to one
-                if(graph.cells[row][column] == 0):
-                    graph.cells[row][column] = -1
+                if(graph0.cells[row][column] == 0):
+                    graph0.cells[row][column] = -1
+                if(graph1.cells[row][column] == 0):
+                    graph1.cells[row][column] = -1
+                if(graph2.cells[row][column] == 0):
+                    graph2.cells[row][column] = -1
+                if(graph3.cells[row][column] == 0):
+                    graph3.cells[row][column] = -1
 
         # Set the screen background
         screen.fill(BLACK)
@@ -181,19 +199,19 @@ if __name__ == "__main__":
                 color = WHITE
                 # if grid[row][column] == 1:
                 #     color = GREEN
-                pygame.draw.rect(screen, colors[graph.cells[row][column]],
+                pygame.draw.rect(screen, colors[graph0.cells[row][column]],
                                  [(MARGIN + WIDTH) * column + MARGIN,
                                   (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
                 node_name = 'x' + str(column) + 'y' + str(row)
-                if(graph.graph[node_name].g != float('inf')):
-                    # text = basicfont.render(
-                    # str(graph.graph[node_name].g), True, (0, 0, 200), (255,
-                    # 255, 255))
-                    text = basicfont.render(str(graph.graph[node_name].g), True, (0, 200, 0))
-                    textrect = text.get_rect()
-                    textrect.centerx = int(column * (WIDTH + MARGIN) + WIDTH / 2) + MARGIN
-                    textrect.centery = int(row * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN
-                    screen.blit(text, textrect)
+#                if(graph1.graph[node_name].g != float('inf')):
+#                    # text = basicfont.render(
+#                    # str(graph.graph[node_name].g), True, (0, 0, 200), (255,
+#                    # 255, 255))
+#                    text = basicfont.render(str(graph1.graph[node_name].g), True, (0, 200, 0))
+#                    textrect = text.get_rect()
+#                    textrect.centerx = int(column * (WIDTH + MARGIN) + WIDTH / 2) + MARGIN
+#                    textrect.centery = int(row * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN
+#                    screen.blit(text, textrect)
 
         # fill in goal cell with GREEN
         pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * goal_coords[0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * goal_coords[1] + MARGIN - WIDTH / 4, WIDTH / 2, HEIGHT / 2])
