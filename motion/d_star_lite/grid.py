@@ -14,7 +14,10 @@ class GridWorld(Graph):
         self.connect8 = connect8
         self.graph = {}
         # placing obstacles
-        self.cells[1][1] = -1
+        self.cells[11][25] = -1
+        self.cells[25][11] = -1
+        self.cells[39][25] = -1
+        self.cells[25][39] = -1
         self.generateGraphFromGrid()
         # self.printGrid()
 
