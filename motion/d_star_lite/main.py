@@ -56,6 +56,8 @@ Y_DIM = 50
 VIEWING_RANGE = 3
 
 
+
+
 # Set the HEIGHT and WIDTH of the screen
 WINDOW_SIZE = [(WIDTH + MARGIN) * X_DIM + MARGIN,
                (HEIGHT + MARGIN) * Y_DIM + MARGIN]
@@ -81,8 +83,8 @@ if __name__ == "__main__":
     graph3 = GridWorld(X_DIM, Y_DIM)
     s0_start = 'x40y25'
     s1_start = 'x10y25'
-    s2_start = 'x25y40'
-    s3_start = 'x25y10'
+    s2_start = 'x25y10'
+    s3_start = 'x25y40'
     s_goal = 'x25y25'
     goal_coords = stateNameToCoords(s_goal)
 
@@ -131,13 +133,12 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:  # If user `cliked close
                 done = True  # Flag that we are done so we exit this loop
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                # print('space bar! call next action')
                 s0_new, k_m0 = moveAndRescan(graph0, queue0, s0_current, VIEWING_RANGE, k_m0)  
                 if s0_new == 'goal':
                     print('Goal Reached! uav0')
                     done0 = True
                 else:
-                    # print('setting s_current to ', s_new)
+                    print('setting s0_current to ', s0_new)
                     s0_current = s0_new
                     pos0_coords = stateNameToCoords(s0_current)
                     # print('got pos coords: ', pos_coords)
@@ -147,7 +148,7 @@ if __name__ == "__main__":
                     print('Goal Reached! uav1')
                     done1 = True
                 else:
-                    # print('setting s_current to ', s_new)
+                    print('setting s1_current to ', s1_new)
                     s1_current = s1_new
                     pos1_coords = stateNameToCoords(s1_current)
                     # print('got pos coords: ', pos_coords)
@@ -157,7 +158,7 @@ if __name__ == "__main__":
                     print('Goal Reached! uav2')
                     done2 = True
                 else:
-                    # print('setting s_current to ', s_new)
+                    print('setting s2_current to ', s2_new)
                     s2_current = s2_new
                     pos2_coords = stateNameToCoords(s2_current)
                     # print('got pos coords: ', pos_coords)
@@ -167,7 +168,7 @@ if __name__ == "__main__":
                     print('Goal Reached! uav3')
                     done3 = True
                 else:
-                    # print('setting s_current to ', s_new)
+                    print('setting s3_current to ', s3_new)
                     s3_current = s3_new
                     pos3_coords = stateNameToCoords(s3_current)
                     # print('got pos coords: ', pos_coords)
@@ -178,8 +179,8 @@ if __name__ == "__main__":
                 # User clicks the mouse. Get the position
                 pos = pygame.mouse.get_pos()
                 # Change the x/y screen coordinates to grid coordinates
-                column = pos[0] // (WIDTH + MARGIN)
-                row = pos[1] // (HEIGHT + MARGIN)
+                column = pos[0] // (WIDTH + MARGIN) 
+                row = pos[1] // (HEIGHT + MARGIN) 
                 # Set that location to one
                 if(graph0.cells[row][column] == 0):
                     graph0.cells[row][column] = -1
@@ -198,26 +199,45 @@ if __name__ == "__main__":
             for column in range(X_DIM):
                 color = WHITE
                 # if grid[row][column] == 1:
-                #     color = GREEN
-                pygame.draw.rect(screen, colors[graph0.cells[row][column]],
-                                 [(MARGIN + WIDTH) * column + MARGIN,
-                                  (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
+                #     color = GREEN 
+                #create the grid
+                pygame.draw.rect(screen, colors[0], [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
                 node_name = 'x' + str(column) + 'y' + str(row)
-#                if(graph1.graph[node_name].g != float('inf')):
-#                    # text = basicfont.render(
-#                    # str(graph.graph[node_name].g), True, (0, 0, 200), (255,
-#                    # 255, 255))
-#                    text = basicfont.render(str(graph1.graph[node_name].g), True, (0, 200, 0))
-#                    textrect = text.get_rect()
-#                    textrect.centerx = int(column * (WIDTH + MARGIN) + WIDTH / 2) + MARGIN
-#                    textrect.centery = int(row * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN
-#                    screen.blit(text, textrect)
+                if graph0.cells[row][column] == -1: # if there is an obstacle (we could use any graph e.g graph1, and it would be the same)
+                    pygame.draw.rect(screen, colors[graph0.cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                    node_name = 'x' + str(column) + 'y' + str(row) 
+                    # print('obstacle0 at ', node_name, 'with value', graph0.cells[row][column])
+                if graph0.cells[row][column] == -2 : # obstacles that uav0 has seen
+                    pygame.draw.rect(screen, colors[graph0.cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                    node_name = 'x' + str(column) + 'y' + str(row) 
+                    print('obstacle0 at ', node_name, 'with value', graph0.cells[row][column])
+                if graph1.cells[row][column] == -2 : # obstacles that uav1 has seen
+                    pygame.draw.rect(screen, colors[graph1.cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                    node_name = 'x' + str(column) + 'y' + str(row)
+                    print('obstacle1 at ', node_name, 'with value', graph1.cells[row][column])
+                if graph2.cells[row][column] == -2 : # obstacles that uav2 has seen
+                    pygame.draw.rect(screen, colors[graph2.cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                    node_name = 'x' + str(column) + 'y' + str(row)
+                    print('obstacle2 at ', node_name, 'with value', graph2.cells[row][column])
+                if  graph3.cells[row][column] == -2 : # obstacles that uav3 has seen
+                    pygame.draw.rect(screen, colors[graph3.cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                    node_name = 'x' + str(column) + 'y' + str(row)
+                    print('obstacle3 at ', node_name, 'with value', graph3.cells[row][column])
+                #    if(graph1.graph[node_name].g != float('inf')):
+                #        # text = basicfont.render(
+                #        # str(graph.graph[node_name].g), True, (0, 0, 200), (255,
+                #        # 255, 255))
+                #        text = basicfont.render(str(graph1.graph[node_name].g), True, (0, 200, 0))
+                #        textrect = text.get_rect()
+                #        textrect.centerx = int(column * (WIDTH + MARGIN) + WIDTH / 2) + MARGIN
+                #        textrect.centery = int(row * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN
+                #        screen.blit(text, textrect)
 
         # fill in goal cell with GREEN
-        pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * goal_coords[0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * goal_coords[1] + MARGIN - WIDTH / 4, WIDTH / 2, HEIGHT / 2])
+        pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * goal_coords[0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * goal_coords[1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2])
         # print('drawing robot pos_coords: ', pos_coords)
         # draw moving robot, based on pos_coords
-        # robot_center = [int(pos_coords[0] * (WIDTH + MARGIN) + WIDTH / 2) +  MARGIN, int(pos_coords[1] * (HEIGHT + MARGIN) + HEIGHT / 2) + MARGIN] # drone appears at the center of a square
+        
         robot0_center = [int(pos0_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos0_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
         robot1_center = [int(pos1_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos1_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
         robot2_center = [int(pos2_coords[0] * (WIDTH + MARGIN)) +  MARGIN, int(pos2_coords[1] * (HEIGHT + MARGIN)) + MARGIN] # drone appears at the upper left corner of a square
