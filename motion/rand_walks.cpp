@@ -142,10 +142,7 @@ int main(int argc, char **argv)
         if(abs(pose.pose.position.x - current_position.pose.position.x)<0.1){
             if(abs(pose.pose.position.y - current_position.pose.position.y)<0.1){
                 if(abs(pose.pose.position.z - current_position.pose.position.z)<0.1){
-                    //give_target(ID);
-                    pose.pose.position.x = current_position.pose.position.x;
-                    pose.pose.position.y = current_position.pose.position.y;
-                    pose.pose.position.z = current_position.pose.position.z;
+                    //give_target(ID); // uncomment to let drone get new goal when it reaches current goal
                 } 
             } 
         }
