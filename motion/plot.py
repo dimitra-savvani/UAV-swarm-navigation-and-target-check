@@ -202,9 +202,9 @@ def trajectory_plot():
     
     ID = sys.argv[1]
     uav = "uav" + ID
-    uav_topic = uav+"/mavros/global_position/local"
-    goal_topic = uav+"/mavros/setpoint_position/global"
-    rospy.Subscriber(uav_topic, Odometry, route_callback, (ID)) 
+    route_topic = uav + "/mavros/global_position/local"
+    goal_topic = uav + "/mavros/setpoint_position/global"
+    rospy.Subscriber(route_topic, Odometry, route_callback, (ID)) 
     rospy.Subscriber(goal_topic, PoseStamped, goal_callback, (ID))
 
     ani = FuncAnimation(plt.gcf(), animate, fargs=(ID,), interval=1000) 
