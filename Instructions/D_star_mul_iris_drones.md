@@ -100,3 +100,9 @@ cd catkin_ws
 catkin build
 ```
 
+## Install pygame 
+
+Open a terminal and type:
+```
+sudo apt-get install python-pygame
+```
