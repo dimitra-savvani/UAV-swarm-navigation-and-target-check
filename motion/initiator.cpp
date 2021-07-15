@@ -6,6 +6,7 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <motion/take_off.h>
 #include <tuple>
 
 using namespace std;
@@ -23,7 +24,7 @@ void position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
 geometry_msgs::PoseStamped goal_pose; // for setting wanted goal location (local coordinates) 
 geometry_msgs::PoseStamped global_goal_pose; // for ploting goal positions at plot.py
-void take_off(string ID){
+void go_to(string ID){
     /* cout << "dose x:" << endl;
     cin >> goal_pose.pose.position.x;
     cout << "dose y:" << endl;
@@ -59,6 +60,7 @@ void take_off(string ID){
     ROS_INFO("%f\n%f\n%f\n", global_goal_pose.pose.position.x, global_goal_pose.pose.position.y, goal_pose.pose.position.z);
 }
 
+
 int main(int argc, char **argv)
 {
     srand (time(NULL));
@@ -73,9 +75,10 @@ int main(int argc, char **argv)
     arming and mode change. Note that for your own system, the "mavros" prefix might be different as it will 
     depend on the name given to the node in it's launch file. */
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>(uav + "/mavros/state", 10, state_cb);
+    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, position_cb);
     ros::Publisher local_goal_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/local", 10);
     ros::Publisher global_goal_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/global", 10);
-    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, position_cb);
+    ros::Publisher took_off_pub = nh.advertise<motion::take_off>(uav + "/motion/take_off_topic", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>(uav + "/mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>(uav + "/mavros/set_mode");
 
@@ -97,7 +100,7 @@ int main(int argc, char **argv)
 
     /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
     coordinates to the standard ENU frame and vice-versa. This is why we set z to positive 2. */
-    take_off(ID);
+    go_to(ID);
 
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
@@ -138,12 +141,14 @@ int main(int argc, char **argv)
         local_goal_pos_pub.publish(goal_pose);
         global_goal_pos_pub.publish(global_goal_pose);
 
-
+        motion::take_off take_off_flag;
+        // take_off_flag.took_off = false;
         if(abs(goal_pose.pose.position.x - current_position.pose.position.x)<0.1){
             if(abs(goal_pose.pose.position.y - current_position.pose.position.y)<0.1){
                 if(abs(goal_pose.pose.position.z - current_position.pose.position.z)<0.1){ //if drone reaches goal take_off position
-                    //take_off(ID);
-
+                    //go_to(ID);
+                    take_off_flag.took_off = true;
+                    took_off_pub.publish(take_off_flag);
                     // goal_pose.pose.position.x = current_position.pose.position.x;
                     // goal_pose.pose.position.y = current_position.pose.position.y;
                     // goal_pose.pose.position.z = current_position.pose.position.z;
