@@ -1,7 +1,10 @@
+#!/usr/bin/env python2
+
 import heapq
 import pygame
+import sys
 
-
+from nav_node import initialize_pos, navigator
 from graph import Node, Graph
 from grid import GridWorld
 from utils import stateNameToCoords
@@ -81,6 +84,8 @@ if __name__ == "__main__":
     graph1 = GridWorld(X_DIM, Y_DIM)
     graph2 = GridWorld(X_DIM, Y_DIM)
     graph3 = GridWorld(X_DIM, Y_DIM)
+    ID = sys.argv[1] #drone ID
+    (s0_start, s1_start, s2_start, s3_start) = initialize_pos(ID)
     s0_start = 'x40y25'
     s1_start = 'x10y25'
     s2_start = 'x25y10'
