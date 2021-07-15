@@ -1,13 +1,21 @@
 import rospy
+from nav_msgs.msg import Odometry
+from motion.msg import take_off
+
+def initial_pos_callback(initial_pos_callback, args):
+    pass
+
+# def flag_take_off_callback(take_off_flag, args):
+#     pass
+
+def initialize_pos(ID):
+    uav = "uav" + ID
+    pos_topic = uav + "/mavros/global_position/local"
+    rospy.Subscriber(pos_topic, Odometry, initial_pos_callback, (ID)) 
+    return 1,1,1,1
 
 def navigator():
-    rospy.init_node('navigation_node', anonymous=True)
-
-    uav_topic = uav+"/mavros/global_position/local"
-    goal_topic = uav+"/mavros/setpoint_position/global"
-    rospy.Subscriber(uav_topic, Odometry, route_callback, (ID)) 
-    rospy.Subscriber(goal_topic, PoseStamped, goal_callback, (ID))
-
-
-    # spin() -> keeps python from exiting until this node is stopped
-    rospy.spin()
+    # uav = "uav" + ID
+    # take_off_topic = uav + "/motion/take_off_topic"
+    # rospy.Subscriber(take_off_topic, take_off, flag_take_off_callback, (ID)) 
+    pass
