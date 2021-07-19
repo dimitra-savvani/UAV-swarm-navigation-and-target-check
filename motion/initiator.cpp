@@ -40,16 +40,16 @@ void go_to(string ID){
     global_goal_pose.pose.position.y = goal_pose.pose.position.y;
 
     if (ID == "0"){
-        global_goal_pose.pose.position.x = global_goal_pose.pose.position.x + 30;
+        global_goal_pose.pose.position.x = global_goal_pose.pose.position.x + 15;
     }
     else if (ID == "1"){
-        global_goal_pose.pose.position.x = global_goal_pose.pose.position.x - 30;
+        global_goal_pose.pose.position.x = global_goal_pose.pose.position.x - 15;
     }
     else if (ID == "2"){
-        global_goal_pose.pose.position.y = global_goal_pose.pose.position.y + 30;
+        global_goal_pose.pose.position.y = global_goal_pose.pose.position.y + 15;
     }
     else if (ID == "3"){
-        global_goal_pose.pose.position.y = global_goal_pose.pose.position.y - 30;
+        global_goal_pose.pose.position.y = global_goal_pose.pose.position.y - 15;
     }
     // else if (ID == "4"){
     //     global_goal_pose.pose.position.x = global_goal_pose.pose.position.x + 31;
