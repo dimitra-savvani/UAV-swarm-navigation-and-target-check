@@ -51,11 +51,8 @@ void go_to(string ID){
     else if (ID == "3"){
         global_goal_pose.pose.position.y = global_goal_pose.pose.position.y - 15;
     }
-    // else if (ID == "4"){
-    //     global_goal_pose.pose.position.x = global_goal_pose.pose.position.x + 31;
-    // }
+   
 
-    
 
     ROS_INFO("%f\n%f\n%f\n", global_goal_pose.pose.position.x, global_goal_pose.pose.position.y, goal_pose.pose.position.z);
 }
