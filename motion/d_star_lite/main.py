@@ -90,6 +90,7 @@ if __name__ == "__main__":
     # trrr = nav.navigator()
     s_goal = 'x25y25'
     goal_coords = stateNameToCoords(s_goal)
+    nav.set_target_pos(goal_coords)
 
     queue = []
     s_current = []
