@@ -7,9 +7,16 @@
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 #include <motion/take_off.h>
+#include <motion/global_current_pos.h>
 #include <tuple>
 
 using namespace std;
+
+struct coordinates
+{
+   float x;
+   float y;
+};
 
 // We create a simple callback which will save the current state of the autopilot 
 mavros_msgs::State current_state;
@@ -23,40 +30,38 @@ void position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 }
 
 geometry_msgs::PoseStamped goal_pose; // for setting wanted goal location (local coordinates) 
-geometry_msgs::PoseStamped global_goal_pose; // for ploting goal positions at plot.py
-void go_to(string ID){
-    /* cout << "dose x:" << endl;
-    cin >> goal_pose.pose.position.x;
-    cout << "dose y:" << endl;
-    cin >> goal_pose.pose.position.y;
-    cout << "dose z:" << endl;
-    cin >> goal_pose.pose.position.z; */
-
+void go_to(){
+    
     goal_pose.pose.position.x = 0;
     goal_pose.pose.position.y = 0;
     goal_pose.pose.position.z = 2;
-
-    global_goal_pose.pose.position.x = goal_pose.pose.position.x;
-    global_goal_pose.pose.position.y = goal_pose.pose.position.y;
-
-    if (ID == "0"){
-        global_goal_pose.pose.position.x = global_goal_pose.pose.position.x + 15;
-    }
-    else if (ID == "1"){
-        global_goal_pose.pose.position.x = global_goal_pose.pose.position.x - 15;
-    }
-    else if (ID == "2"){
-        global_goal_pose.pose.position.y = global_goal_pose.pose.position.y + 15;
-    }
-    else if (ID == "3"){
-        global_goal_pose.pose.position.y = global_goal_pose.pose.position.y - 15;
-    }
-   
-
-
-    ROS_INFO("%f\n%f\n%f\n", global_goal_pose.pose.position.x, global_goal_pose.pose.position.y, goal_pose.pose.position.z);
 }
 
+coordinates local_to_global_coords(string ID, float in_x, float in_y, int direction){
+    // direction controlls whether the coordinates are converted from local to global or from global to local, should either be 1 or -1.
+    
+    float out_x, out_y;
+
+    if (ID == "0"){
+        out_x = in_x + 15*direction;
+        out_y = in_y;
+    }
+    else if (ID == "1"){
+        out_x = in_x - 15*direction;
+        out_y = in_y;
+    }
+    else if (ID == "2"){
+        out_x = in_x;
+        out_y = in_y + 15*direction;
+    }
+    else if (ID == "3"){
+        out_x = in_x;
+        out_y = in_y - 15*direction;
+    }
+
+    coordinates out_coords = {out_x, out_y};
+    return out_coords;
+}
 
 int main(int argc, char **argv)
 {
@@ -72,10 +77,12 @@ int main(int argc, char **argv)
     arming and mode change. Note that for your own system, the "mavros" prefix might be different as it will 
     depend on the name given to the node in it's launch file. */
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>(uav + "/mavros/state", 10, state_cb);
+    // ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, boost::bind(position_cb,_1, ID)); // this allowes the callback to take one more argument
     ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, position_cb);
     ros::Publisher local_goal_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/local", 10);
     ros::Publisher global_goal_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/global", 10);
     ros::Publisher took_off_pub = nh.advertise<motion::take_off>(uav + "/motion/take_off_topic", 10);
+    ros::Publisher global_current_pos_pub = nh.advertise<motion::global_current_pos>(uav + "/motion/global_current_pos_topic", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>(uav + "/mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>(uav + "/mavros/set_mode");
 
@@ -97,7 +104,7 @@ int main(int argc, char **argv)
 
     /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
     coordinates to the standard ENU frame and vice-versa. This is why we set z to positive 2. */
-    go_to(ID);
+    go_to();
 
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
@@ -136,9 +143,17 @@ int main(int argc, char **argv)
         }
 
         local_goal_pos_pub.publish(goal_pose);
+
+        geometry_msgs::PoseStamped global_goal_pose; // for ploting goal positions at plot.py
+        coordinates global_goal = local_to_global_coords(ID, goal_pose.pose.position.x, goal_pose.pose.position.y, 1);
+        global_goal_pose.pose.position.x = global_goal.x;
+        global_goal_pose.pose.position.y = global_goal.y;
         global_goal_pos_pub.publish(global_goal_pose);
+        // ROS_INFO("uav%s %f %f", ID, global_goal_pose.pose.position.x, global_goal_pose.pose.position.y);
+        // ROS_INFO("%f\n%f\n%f\n", global_goal_pose.pose.position.x, global_goal_pose.pose.position.y, goal_pose.pose.position.z);
 
         motion::take_off take_off_flag;
+        motion::global_current_pos global_current_pose;
         // take_off_flag.took_off = false;
         if(abs(goal_pose.pose.position.x - current_position.pose.position.x)<0.1){
             if(abs(goal_pose.pose.position.y - current_position.pose.position.y)<0.1){
@@ -146,6 +161,11 @@ int main(int argc, char **argv)
                     //go_to(ID);
                     take_off_flag.took_off = true;
                     took_off_pub.publish(take_off_flag);
+                    
+                    coordinates global_current = local_to_global_coords(ID, current_position.pose.position.x, current_position.pose.position.y, 1);
+                    global_current_pose.position.x = global_current.x;
+                    global_current_pose.position.y = global_current.y;
+                    global_current_pos_pub.publish(global_current_pose);
                     // goal_pose.pose.position.x = current_position.pose.position.x;
                     // goal_pose.pose.position.y = current_position.pose.position.y;
                     // goal_pose.pose.position.z = current_position.pose.position.z;
