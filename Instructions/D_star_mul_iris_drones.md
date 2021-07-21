@@ -45,6 +45,7 @@ with
 add_message_files(
   FILES
   take_off.msg
+  global_current_pos.msg
 )
 ```
 3. Also replace
@@ -78,7 +79,7 @@ catkin_package(
 # Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs# geometry_msgs#   mavros_msgs#   sensor_msgs#   
+  std_msgs geometry_msgs#   mavros_msgs#   sensor_msgs#   
 )
 ```
 
