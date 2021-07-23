@@ -18,6 +18,9 @@ struct coordinates
    float y;
 };
 
+coordinates local_to_global_coords(string ID, float in_x, float in_y, int direction);
+coordinates avoid_on_goal_collision(string ID, float in_x, float in_y);
+
 // We create a simple callback which will save the current state of the autopilot 
 mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr& msg){
@@ -25,17 +28,34 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){
 }
 
 geometry_msgs::PoseStamped current_position; // for comparing current position(local) to wanted goal location(local)
-void position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
+void uav_position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
     current_position = *msg;
 }
 
-geometry_msgs::PoseStamped goal_pose; // for setting wanted goal location (local coordinates) 
-void go_to(){
-    
-    goal_pose.pose.position.x = 0;
-    goal_pose.pose.position.y = 0;
-    goal_pose.pose.position.z = 2;
+motion::global_current_pos global_goal_pose; // for setting current goal location(global)
+void goal_position_cb(const motion::global_current_pos::ConstPtr& msg){
+    global_goal_pose = *msg;
 }
+
+geometry_msgs::PoseStamped local_goal_pose; // for setting wanted goal location (local coordinates) 
+void go_to(string ID){
+    
+    /* local_goal_pose.pose.position.x = 0;
+    local_goal_pose.pose.position.y = 0;
+    local_goal_pose.pose.position.z = 2; */
+
+    coordinates local_goal =local_to_global_coords(ID, global_goal_pose.position.x, global_goal_pose.position.y, -1);
+    local_goal_pose.pose.position.x = local_goal.x;
+    local_goal_pose.pose.position.y = local_goal.y;
+    local_goal_pose.pose.position.z = global_goal_pose.position.z;
+    //ROS_INFO("local goals %f, %f, %f\n", local_goal_pose.pose.position.x, local_goal_pose.pose.position.y, local_goal_pose.pose.position.z);
+    
+    local_goal = avoid_on_goal_collision(ID, local_goal_pose.pose.position.x, local_goal_pose.pose.position.y);
+    local_goal_pose.pose.position.x = local_goal.x;
+    local_goal_pose.pose.position.y = local_goal.y;
+    ROS_INFO("local goals %f, %f, %f\n", local_goal_pose.pose.position.x, local_goal_pose.pose.position.y, local_goal_pose.pose.position.z);
+
+} 
 
 coordinates local_to_global_coords(string ID, float in_x, float in_y, int direction){
     // direction controlls whether the coordinates are converted from local to global or from global to local, should either be 1 or -1.
@@ -63,6 +83,48 @@ coordinates local_to_global_coords(string ID, float in_x, float in_y, int direct
     return out_coords;
 }
 
+coordinates avoid_on_goal_collision(string ID, float in_x, float in_y){
+
+    float out_x, out_y;
+
+    /* if (ID == "0"){
+        out_x = in_x + 0.5;
+        out_y = in_y;
+    }
+    else if (ID == "1"){
+        out_x = in_x - 0.5;
+        out_y = in_y;
+    }
+    else if (ID == "2"){
+        out_x = in_x;
+        out_y = in_y + 0.5;
+    }
+    else if (ID == "3"){
+        out_x = in_x;
+        out_y = in_y - 0.5;
+    } */
+
+    if (ID == "0"){
+        out_x = in_x + 14;
+        out_y = in_y;
+    }
+    else if (ID == "1"){
+        out_x = in_x -14;
+        out_y = in_y;
+    }
+    else if (ID == "2"){
+        out_x = in_x;
+        out_y = in_y + 14;
+    }
+    else if (ID == "3"){
+        out_x = in_x;
+        out_y = in_y - 14;
+    }
+
+    coordinates out_coords = {out_x, out_y};
+    return out_coords;
+}
+
 int main(int argc, char **argv)
 {
     srand (time(NULL));
@@ -77,8 +139,9 @@ int main(int argc, char **argv)
     arming and mode change. Note that for your own system, the "mavros" prefix might be different as it will 
     depend on the name given to the node in it's launch file. */
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>(uav + "/mavros/state", 10, state_cb);
-    // ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, boost::bind(position_cb,_1, ID)); // this allowes the callback to take one more argument
-    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, position_cb);
+    // ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, boost::bind(uav_position_cb,_1, ID)); // this allowes the callback to take one more argument
+    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, uav_position_cb);
+    ros::Subscriber global_goal_pos = nh.subscribe<motion::global_current_pos>("goal/motion/global_current_pos_topic", 10, goal_position_cb);
     ros::Publisher local_goal_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/local", 10);
     ros::Publisher global_goal_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/global", 10);
     ros::Publisher took_off_pub = nh.advertise<motion::take_off>(uav + "/motion/take_off_topic", 10);
@@ -104,16 +167,29 @@ int main(int argc, char **argv)
 
     /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
     coordinates to the standard ENU frame and vice-versa. This is why we set z to positive 2. */
-    go_to();
-
+    
+    go_to(ID);
+/*     geometry_msgs::PoseStamped local_goal_pose; // for setting wanted goal location (local coordinates)
+    coordinates local_goal =local_to_global_coords(ID, global_goal_pose.position.x, global_goal_pose.position.y, -1);
+    local_goal_pose.pose.position.x = local_goal.x;
+    local_goal_pose.pose.position.y = local_goal.y;
+    local_goal_pose.pose.position.z = global_goal_pose.position.z;
+    //ROS_INFO("local goals %f, %f, %f\n", local_goal_pose.pose.position.x, local_goal_pose.pose.position.y, local_goal_pose.pose.position.z);
+    
+    local_goal = avoid_on_goal_collision(ID, local_goal_pose.pose.position.x, local_goal_pose.pose.position.y);
+    local_goal_pose.pose.position.x = local_goal.x;
+    local_goal_pose.pose.position.y = local_goal.y;
+    ROS_INFO("local goals %f, %f, %f\n", local_goal_pose.pose.position.x, local_goal_pose.pose.position.y, local_goal_pose.pose.position.z);
+ */
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
-        local_goal_pos_pub.publish(goal_pose);
+        local_goal_pos_pub.publish(local_goal_pose);
         ros::spinOnce();
         rate.sleep();
     }
+    // ROS_INFO("fed local_goal_pos 100 times for uav");
 
     mavros_msgs::SetMode offb_set_mode;
     //We set the custom mode to OFFBOARD
@@ -142,33 +218,34 @@ int main(int argc, char **argv)
             }
         }
 
-        local_goal_pos_pub.publish(goal_pose);
+        local_goal_pos_pub.publish(local_goal_pose);
+        // ROS_INFO("published local_goal_pos for uav");
 
-        geometry_msgs::PoseStamped global_goal_pose; // for ploting goal positions at plot.py
-        coordinates global_goal = local_to_global_coords(ID, goal_pose.pose.position.x, goal_pose.pose.position.y, 1);
+        /* geometry_msgs::PoseStamped global_goal_pose; // for ploting goal positions at plot.py
+        coordinates global_goal = local_to_global_coords(ID, local_goal_pose.pose.position.x, local_goal_pose.pose.position.y, 1);
         global_goal_pose.pose.position.x = global_goal.x;
-        global_goal_pose.pose.position.y = global_goal.y;
-        global_goal_pos_pub.publish(global_goal_pose);
+        global_goal_pose.pose.position.y = global_goal.y; */
+        global_goal_pos_pub.publish(global_goal_pose); // for ploting goal positions at plot.py
         // ROS_INFO("uav%s %f %f", ID, global_goal_pose.pose.position.x, global_goal_pose.pose.position.y);
-        // ROS_INFO("%f\n%f\n%f\n", global_goal_pose.pose.position.x, global_goal_pose.pose.position.y, goal_pose.pose.position.z);
+        // ROS_INFO("%f\n%f\n%f\n", global_goal_pose.pose.position.x, global_goal_pose.pose.position.y, local_goal_pose.pose.position.z);
 
         motion::take_off take_off_flag;
         motion::global_current_pos global_current_pose;
-        // take_off_flag.took_off = false;
-        if(abs(goal_pose.pose.position.x - current_position.pose.position.x)<0.1){
-            if(abs(goal_pose.pose.position.y - current_position.pose.position.y)<0.1){
-                if(abs(goal_pose.pose.position.z - current_position.pose.position.z)<0.1){ //if drone reaches goal take_off position
-                    //go_to(ID);
-                    take_off_flag.took_off = true;
-                    took_off_pub.publish(take_off_flag);
-                    
-                    coordinates global_current = local_to_global_coords(ID, current_position.pose.position.x, current_position.pose.position.y, 1);
+        coordinates global_current = local_to_global_coords(ID, current_position.pose.position.x, current_position.pose.position.y, 1);
                     global_current_pose.position.x = global_current.x;
                     global_current_pose.position.y = global_current.y;
                     global_current_pos_pub.publish(global_current_pose);
-                    // goal_pose.pose.position.x = current_position.pose.position.x;
-                    // goal_pose.pose.position.y = current_position.pose.position.y;
-                    // goal_pose.pose.position.z = current_position.pose.position.z;
+        // take_off_flag.took_off = false;
+        if(abs(local_goal_pose.pose.position.x - current_position.pose.position.x)<0.1){
+            if(abs(local_goal_pose.pose.position.y - current_position.pose.position.y)<0.1){
+                if(abs(local_goal_pose.pose.position.z - current_position.pose.position.z)<0.1){ //if drone reaches goal take_off position
+                    //go_to(ID);
+                    take_off_flag.took_off = true;
+                    took_off_pub.publish(take_off_flag);
+            
+                    // local_goal_pose.pose.position.x = current_position.pose.position.x;
+                    // local_goal_pose.pose.position.y = current_position.pose.position.y;
+                    // local_goal_pose.pose.position.z = current_position.pose.position.z;
                 } 
             } 
         }
