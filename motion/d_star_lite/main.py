@@ -85,12 +85,13 @@ if __name__ == "__main__":
         k_m.append(0) # initialize k+m for all UAVs to 0
     nav = Navigator()
 
-    s_start = []
-    (s_start) = nav.initialize_UAVs_pos(Num_of_UAVs) # read initial UAVs position
     # trrr = nav.navigator()
     s_goal = 'x25y25'
     goal_coords = stateNameToCoords(s_goal)
     nav.set_target_pos(goal_coords)
+
+    s_start = []
+    (s_start) = nav.initialize_UAVs_pos(Num_of_UAVs) # read initial UAVs position
 
     queue = []
     s_current = []
