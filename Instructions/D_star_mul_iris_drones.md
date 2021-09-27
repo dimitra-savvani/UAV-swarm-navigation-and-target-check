@@ -14,7 +14,7 @@ add_executable(initiator src/operator.cpp)
 target_link_libraries(initiator ${catkin_LIBRARIES})
 #add_dependencies(initiator motion_generate_messages_cpp)
 ```
-* Download [initiator.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/initiator.cpp) and place it under src/motion/src of your catkin workspace
+* Download [initiator.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion//src/initiator.cpp) and place it under src/motion/src of your catkin workspace
 
 * On  a terminal run
 ```
