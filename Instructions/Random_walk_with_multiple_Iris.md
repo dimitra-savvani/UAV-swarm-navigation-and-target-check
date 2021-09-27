@@ -18,7 +18,7 @@ target_link_libraries(rand_walks ${catkin_LIBRARIES})
 
 ## Add and compile rand_walks.cpp file to your motion package:
 
-* Download [rand_walks.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/rand_walks.cpp) and place it under src/motion/src of your catkin workspace
+* Download [rand_walks.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/src/rand_walks.cpp) and place it under src/motion/src of your catkin workspace
 
 * On  a terminal run
 ```
@@ -28,20 +28,20 @@ catkin build
 
 ## Execute random walks with Iris drones on Gazebo
 
-Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md).
+Asuming that you downloaded and made executable the scripts from the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md).
 
 
 On a terminal:
 
 ```
-cd bashScripts
+cd script
 bash mul_launch1.sh
 ```
 
 On a second terminal:
 
 ```
-cd bashScripts
+cd script
 bash mul_launch2.sh
 ```
 
@@ -57,7 +57,7 @@ number could be any integer from 0 to 3.
 
 * or to run rand_walks node for all drones simultaneously: 
 ```
-cd bashScripts
+cd script
 bash rand_walks.sh
 ```
 *If you want to fly less drones you have to open rand_walks.sh script and comment out unwanted drones.
@@ -67,7 +67,7 @@ If y
 
 * Plot node plots dynamically a drone 's path and its goal locations, so it is a prerequisite to have one or more drones executing rand_walks node. 
 
-* Download [plot.py](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/plot.py) and place it under src/motion/src of your catkin workspace
+* Download [plot.py](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/src/plot.py) and place it under src/motion/src of your catkin workspace
 (don 't forget to change permissions in properties in order to make it executable)
 
 * To run plot node for a specific drone:
@@ -81,11 +81,11 @@ number could be any integer from 0 to 3.
 
 * or to run plot node for all drones simultaneously:
 
-Asuming that you downloaded the [bashScript](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/bashScripts) folder as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md).
+Asuming that you downloaded and made executable the scripts from the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md).
 
 On a terminal run: 
 ```
-cd bashScripts
+cd script
 bash plots.sh
 ```
 *If you want to plot less drones you have to open rand_walks.sh script and comment out unwanted drones
