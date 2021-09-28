@@ -45,7 +45,6 @@ with
 add_message_files(
   FILES
   take_off.msg
-  global_current_pos.msg
 )
 ```
 3. Also replace
