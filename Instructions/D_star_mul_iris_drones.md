@@ -106,3 +106,11 @@ Open a terminal and type:
 ```
 sudo apt-get install python-pygame
 ```
+## Run simulation
+
+Download the [launch](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/launch) folder and place it in your motion folder.
+
+On a terminal run:
+```
+roslaunch motion simulation.launch
+```
