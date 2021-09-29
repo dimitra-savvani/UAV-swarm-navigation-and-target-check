@@ -102,20 +102,20 @@ roslaunch px4 posix_sitl.launch
 ```
 (Alternatively, for commands on terminal 1 and 2)
 
-Download or move (if you have already downloaded) the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder, and place it in the motion folder.
+Download the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder, and place it wherever you want (lets assume you placed them in your Home folder).
 
 Use the chmod command to make the scripts executable, e.g. $ chmod a+x run_script.sh
 
 Now on terminal 1:
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/script
 bash one_launch1.sh
 ```
 (the first time you run `one_launch2.sh`, uncomment `#DONT_RUN=1 make px4_sitl_default gazebo`, then comment it out again for the future runs)
 
 And on terminal 2:
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/script
 bash one_launch2.sh
 ```
 Continue normally on Terminal 3
@@ -165,12 +165,12 @@ Asuming that you have downloaded and made executable the scripts from [script](h
 
 On Terminal 1:
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/script
 bash mul_launch1.sh
 ```
 
 On Terminal 2:
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/script
 bash mul_launch2.sh
 ```
