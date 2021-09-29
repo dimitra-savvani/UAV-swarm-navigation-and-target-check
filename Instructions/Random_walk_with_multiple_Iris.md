@@ -22,7 +22,7 @@ target_link_libraries(rand_walks ${catkin_LIBRARIES})
 
 * On  a terminal run
 ```
-cd catkin_ws
+cd ~/catkin_ws
 catkin build
 ```
 
