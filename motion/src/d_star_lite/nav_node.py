@@ -1,20 +1,25 @@
 from utils import ROS_to_pygame_coordinates
 
 import rospy
-from nav_msgs.msg import Odometry
-from motion.msg import take_off
-from motion.msg import global_current_pos
-from rospy.topics import Subscriber
+# from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
+# from motion.msg import take_off
+# from rospy.topics import Subscriber
 
 
 class Navigator:
 
     def __init__(self):
-        pass
+        rospy.init_node('nav_node', anonymous=True)
 
-    def flag_take_off_callback(self, take_off_flag):
+
+    """ ******************* """
+    """ CALLBACKS """
+    """ ******************* """
+
+    """ def flag_take_off_callback(self, take_off_flag):
         # rospy.loginfo("%s", take_off_flag)
-        pass
+        pass """
 
     """ # rospy.Subscriber(pos_topic, Odometry, self.initial_pos_callback0)
     def initial_pos_callback0(self, initial_pos0):
@@ -23,48 +28,60 @@ class Navigator:
         self.initial_pos0.append(initial_pos0.pose.pose.position.y)
         rospy.loginfo("lsala %s", self.initial_pos0) """
 
-    def initialize_UAVs_pos(self, Num_of_UAVs):
 
-        rospy.init_node('nav_node', anonymous=True)
-        uav_pos_topic = [] # list to store position topics of UAVs 
-        uav_initial_pos = [] # list to store each uav' s initial position from global_current_pos.msg of uav_pos_topic[i]
-        s_start = [] # list for UAVs starting position on pygame graph
-        for i in range(Num_of_UAVs):
+    """ ******************* """
+    """ FUNCTION DECLARATIONS """
+    """ ******************* """
+    
 
-            uav_pos_topic.append("uav" + str(i) + "/motion/global_current_pos_topic")
+    def starting_point_func(self, swarmPopulation):
+
+        position_topic_for_UAV = [] # list to store position topics of UAVs 
+        raw_ROS_starting_point_for_UAV = [] # list to store each uav' s initial position from topic_for_UAV[i]
+        pygame_starting_point_for_UAV = [] # list for UAVs starting position for pygame graph
+        for i in range(swarmPopulation):
+
+            position_topic_for_UAV.append("uav" + str(i) + "/motion/position/global")
          
-            uav_initial_pos.append(rospy.wait_for_message(uav_pos_topic[i], global_current_pos, timeout=None)) # Subscriber to `uav_pos_topic[i]` only for one time
-            rospy.loginfo("uav%s position is %s, %s from nav_node", i, int(round(uav_initial_pos[i].position.x)), int(round(uav_initial_pos[i].position.y)))
+            raw_ROS_starting_point_for_UAV.append(rospy.wait_for_message(position_topic_for_UAV[i], PoseStamped, timeout=None)) # Subscriber to `position_topic_for_UAV[i]` only for one time
+            
+            starting_coordinate = { 
+                "ROS_x" : int(round(raw_ROS_starting_point_for_UAV[i].pose.position.x)), # round coordinates to match the d* lite standards
+                "ROS_y" : int(round(raw_ROS_starting_point_for_UAV[i].pose.position.y)) # round coordinates to match the d* lite standards
+            }
+            # rospy.loginfo("uav%s starting point is %s, %s (from nav_node)", i, starting_coordinate["ROS_x"], starting_coordinate["ROS_y"])
 
-            R_x = int(round(uav_initial_pos[i].position.x))
-            R_y = int(round(uav_initial_pos[i].position.y))
+            (starting_coordinate["pygame_x"], starting_coordinate["pygame_y"]) = ROS_to_pygame_coordinates(starting_coordinate["ROS_x"], starting_coordinate["ROS_y"], 1)
 
-            (p_x, p_y) = ROS_to_pygame_coordinates(R_x, R_y, 1)
-
-            s_start.append("x" + str(p_x) + "y" + str(p_y))
+            pygame_starting_point_for_UAV.append("x" + str(starting_coordinate["pygame_x"]) + "y" + str(starting_coordinate["pygame_y"]))
         
-        return s_start
+        return pygame_starting_point_for_UAV
 
-    def naxt_step_to_target(self, goal_coords):
-        (R_goal_x, R_goal_y) = ROS_to_pygame_coordinates(goal_coords[0], goal_coords[1], -1)
+    def next_step_to_target(self, goal_coords):
+
+        next_step_coordinate = {
+            "pygame_x" : goal_coords[0],
+            "pygame_y" : goal_coords[1]
+        }
+        (next_step_coordinate["ROS_x"], next_step_coordinate["ROS_y"]) = ROS_to_pygame_coordinates(next_step_coordinate["pygame_x"], next_step_coordinate["pygame_y"], -1)
         
-        goal_pos_topic = "goal/motion/global_current_pos_topic"
-        goal_pos_pub = rospy.Publisher(goal_pos_topic, global_current_pos, queue_size=10)
+        next_step_topic = "motion/position/global/target"
+        next_step_pub = rospy.Publisher(next_step_topic, PoseStamped, queue_size=10)
         
 
-        goal_pos = global_current_pos()
-        goal_pos.position.x = R_goal_x
-        goal_pos.position.y = R_goal_y
-        goal_pos.position.z = 2 
-        rospy.loginfo("global goal position from nav_node is %s, %s, %s", R_goal_x, R_goal_y, goal_pos.position.z)
+        next_step = PoseStamped()
+        next_step.pose.position.x = next_step_coordinate["ROS_x"]
+        next_step.pose.position.y = next_step_coordinate["ROS_y"]
+        next_step.pose.position.z = 2 
+        rospy.loginfo("global next step from nav_node is %s, %s, %s", next_step_coordinate["ROS_x"], next_step_coordinate["ROS_y"], next_step.pose.position.z)
 
-        # goal_pos_pub.publish(goal_pos)
+        # next_step_pub.publish(next_step)
        
 
-    def navigator(self):
+    """ def navigator(self):
         # uav = "uav" + ID
-        take_off_topic = "uav0" + "/motion/take_off_topic"
+        take_off_topic = "motion/take_off_topic" + "uav0" 
         rospy.Subscriber(take_off_topic, take_off, self.flag_take_off_callback) 
-        pass
+        pass """
     
     
