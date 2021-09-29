@@ -102,20 +102,20 @@ roslaunch px4 posix_sitl.launch
 ```
 (Alternatively, for commands on terminal 1 and 2)
 
-Downloads the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder, and place it wherever you want. Lets say it placed on Home folder.
+Download or move (if you have already downloaded) the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder, and place it in the motion folder.
 
 Use the chmod command to make the scripts executable, e.g. $ chmod a+x run_script.sh
 
 Now on terminal 1:
 ```
-cd script
+cd ~/catkin_ws/src/motion/script
 bash one_launch1.sh
 ```
 (the first time you run `one_launch2.sh`, uncomment `#DONT_RUN=1 make px4_sitl_default gazebo`, then comment it out again for the future runs)
 
 And on terminal 2:
 ```
-cd script
+cd ~/catkin_ws/src/motion/script
 bash one_launch2.sh
 ```
 Continue normally on Terminal 3
@@ -161,16 +161,16 @@ cd ~/src/Firmware;source ~/catkin_ws/devel/setup.bash;source Tools/setup_gazebo.
 ```
 (Alternatively, for commands on terminal 1 and 2)
 
-Asuming that you downloaded and made executable the scripts from [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder as described above.
+Asuming that you have downloaded and made executable the scripts from [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder as described above.
 
 On Terminal 1:
 ```
-cd script
+cd ~/catkin_ws/src/motion/script
 bash mul_launch1.sh
 ```
 
 On Terminal 2:
 ```
-cd script
+cd ~/catkin_ws/src/motion/script
 bash mul_launch2.sh
 ```
