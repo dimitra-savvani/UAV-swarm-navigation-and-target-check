@@ -1,0 +1,23 @@
+
+<launch>
+    <node pkg="motion"
+            type="mul_launch1.sh" name="run_mul_launch1"
+            output="screen"
+    />
+
+    <node pkg="motion"
+            type="mul_launch2.sh" name="run_mul_launch2"
+            output="screen"
+    />
+
+    <node pkg="motion"
+            type="take_off.sh" name="run_take_off"
+            output="screen"
+    />
+
+    <node pkg="motion"
+            type="main.py" name="run_main"
+            output="screen"
+    />
+
+</launch>
