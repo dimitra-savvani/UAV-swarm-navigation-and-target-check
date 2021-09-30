@@ -10,26 +10,34 @@
 
 using namespace std;
 
+
+mavros_msgs::State current_state;
+geometry_msgs::PoseStamped position_local;
+geometry_msgs::PoseStamped target_point_global;
+
+geometry_msgs::PoseStamped next_step_local; 
+
+bool has_reached_take_off_point = false;
+bool has_reached_step_point = false;
+
+
 /* ******************* */
 /* CALLBACKS */
 /* ******************* */
 
-mavros_msgs::State current_state;
-geometry_msgs::PoseStamped local_position;
-geometry_msgs::PoseStamped global_target_point; 
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg){ // current state of the autopilot 
     current_state = *msg;
 }
 
 
-void local_position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // current local position
-    local_position = *msg;
+void position_local_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // current local position
+    position_local = *msg;
 }
 
 
-void global_target_point_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // current global target point
-    global_target_point = *msg;
+void target_point_global_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // current global target point
+    target_point_global = *msg;
 }
 
 /* ******************* */
@@ -91,14 +99,16 @@ geometry_msgs::PoseStamped avoid_on_goal_collision(string ID, geometry_msgs::Pos
 
 /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
 coordinates to the standard ENU frame and vice-versa. */
-geometry_msgs::PoseStamped local_target_point;
-void go_to(string ID){
-     
-    local_target_point =local_to_global_coords(ID, global_target_point, -1); //pass local goal position to geometry_msgs::PoseStamped variable
-    //ROS_INFO_STREAM("uav" << ID << " 's local target is/n x: " << local_target_point.pose.position.x << "\ty: " << local_target_point.pose.position.y << "\tz: " <<  local_target_point.pose.position.z);
+
+void request_next_step(string ID){
+
+    has_reached_step_point = false;   
+
+    // next_step_local =local_to_global_coords(ID, target_point_global, -1); //pass local goal position to geometry_msgs::PoseStamped variable
+    // //ROS_INFO_STREAM("uav" << ID << " 's local target is/n x: " << next_step_local.pose.position.x << "\ty: " << next_step_local.pose.position.y << "\tz: " <<  next_step_local.pose.position.z);
     
-    local_target_point = avoid_on_goal_collision(ID, local_target_point);
-    //ROS_INFO_STREAM("uav" << ID << " 's local target is/n x: " << local_target_point.pose.position.x << "\ty: " << local_target_point.pose.position.y << "\tz: " <<  local_target_point.pose.position.z);
+    // next_step_local = avoid_on_goal_collision(ID, next_step_local);
+    // //ROS_INFO_STREAM("uav" << ID << " 's local target is/n x: " << next_step_local.pose.position.x << "\ty: " << next_step_local.pose.position.y << "\tz: " <<  next_step_local.pose.position.z);
     
 } 
 
@@ -119,27 +129,27 @@ int main(int argc, char **argv)
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
     (uav + "/mavros/state", 10, state_cb); //instantiate a publisher to publish the commanded local position
 
-    /* ros::Subscriber local_position_sub = nh.subscribe<geometry_msgs::PoseStamped>
-    ("mavros/local_position/pose/" + uav, 10, boost::bind(local_position_cb,_1, ID)); */ // this allows the callback to take one more argument
+    /* ros::Subscriber position_local_sub = nh.subscribe<geometry_msgs::PoseStamped>
+    ("mavros/local_position/pose/" + uav, 10, boost::bind(position_local_cb,_1, ID)); */ // this allows the callback to take one more argument
 
-    ros::Subscriber local_position_sub = nh.subscribe<geometry_msgs::PoseStamped> 
-    (uav + "/mavros/local_position/pose", 10, local_position_cb);
+    ros::Subscriber position_local_sub = nh.subscribe<geometry_msgs::PoseStamped> 
+    (uav + "/mavros/local_position/pose", 10, position_local_cb);
 
-    ros::Subscriber global_target_point_sub = nh.subscribe<geometry_msgs::PoseStamped>
-    ("motion/position/global/target", 10, global_target_point_cb);
+    ros::Subscriber target_point_global_sub = nh.subscribe<geometry_msgs::PoseStamped>
+    ("motion/position/global/target", 10, target_point_global_cb);
     
 
     /* Publishers */
-    ros::Publisher local_target_point_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher next_step_local_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/mavros/setpoint_position/local", 10);
 
-    ros::Publisher global_target_point_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher target_point_global_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/mavros/setpoint_position/global", 10);
 
     /* ros::Publisher took_off_pub = nh.advertise<motion::take_off>
     (uav + "/motion/take_off_topic", 10); */
 
-    ros::Publisher global_position_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher position_global_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/motion/position/global", 10);
     
 
@@ -166,13 +176,14 @@ int main(int argc, char **argv)
         rate.sleep();
     }
     
-    go_to(ID);
+    geometry_msgs::PoseStamped take_off_point_local = position_local; //initial position, when drones have not taken off yet
+    take_off_point_local.pose.position.z = 2; // set take off desired poisition 
 
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
-        local_target_point_pub.publish(local_target_point);
+        next_step_local_pub.publish(take_off_point_local);
         ros::spinOnce();
         rate.sleep();
     }
@@ -205,27 +216,39 @@ int main(int argc, char **argv)
             }
         }
 
-        local_target_point_pub.publish(local_target_point); // keep streaming setpoints
-        // ROS_INFO_STREAM("published local_target_point for " << uav);
+        if(!has_reached_take_off_point){ 
+            next_step_local = take_off_point_local; // until it reaches take off setpoint
+        } else {
+            if (has_reached_step_point)
+            {
+                request_next_step(ID); // when it reaches every point request the next step(it is stored in next_step_local)
+            }
+        }
+        
+        
+        next_step_local_pub.publish(next_step_local); // keep streaming setpoints
+        ROS_INFO_STREAM("published next_step_local " << next_step_local.pose.position << " for " << uav);
 
-        global_target_point_pub.publish(global_target_point); // for ploting goal positions at plot.py
-        //ROS_INFO_STREAM(uav << " 's global target point is/n x: " << global_target_point.pose.position.x << "/ty: " << global_target_point.pose.position.y << "/tz: " << global_target_point.pose.position.z);
+        target_point_global_pub.publish(target_point_global); // for ploting goal positions at plot.py
+        //ROS_INFO_STREAM(uav << " 's global target point is/n x: " << target_point_global.pose.position.x << "/ty: " << target_point_global.pose.position.y << "/tz: " << target_point_global.pose.position.z);
 
-        geometry_msgs::PoseStamped global_position = local_to_global_coords(ID, local_position, 1);
-        global_position_pub.publish(global_position);
+        geometry_msgs::PoseStamped position_global = local_to_global_coords(ID, position_local, 1);
+        position_global_pub.publish(position_global);
 
         // motion::take_off take_off_flag;
         // take_off_flag.took_off = false;
-        if(abs(local_target_point.pose.position.x - local_position.pose.position.x)<0.1){
-            if(abs(local_target_point.pose.position.y - local_position.pose.position.y)<0.1){
-                if(abs(local_target_point.pose.position.z - local_position.pose.position.z)<0.1){ //if drone reaches goal take_off position
-                    //go_to(ID);
+        if(abs(next_step_local.pose.position.x - position_local.pose.position.x)<0.1){
+            if(abs(next_step_local.pose.position.y - position_local.pose.position.y)<0.1){
+                if(abs(next_step_local.pose.position.z - position_local.pose.position.z)<0.1){ //if drone reaches goal take_off position
+                    has_reached_take_off_point = true;
+                    has_reached_step_point = true;
+                    //request_next_step(ID);
                     /* take_off_flag.took_off = true;
                     took_off_pub.publish(take_off_flag); */
             
-                    // local_target_point.pose.position.x = local_position.pose.position.x;
-                    // local_target_point.pose.position.y = local_position.pose.position.y;
-                    // local_target_point.pose.position.z = local_position.pose.position.z;
+                    // next_step_local.pose.position.x = position_local.pose.position.x;
+                    // next_step_local.pose.position.y = position_local.pose.position.y;
+                    // next_step_local.pose.position.z = position_local.pose.position.z;
                 } 
             } 
         }
