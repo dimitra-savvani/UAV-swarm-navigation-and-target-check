@@ -28,7 +28,7 @@ catkin build
 
 ## Execute random walks with Iris drones on Gazebo
 
-Download or move (if you have already downloaded as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)) the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder, and place it in the motion folder. 
+Download or move (if you have already downloaded as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)) the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder, and place it in the motion folder. 
 
 Don' t forget to use the chmod command to make the scripts executable, e.g. $ chmod a+x run_script.sh
 
@@ -36,14 +36,14 @@ Don' t forget to use the chmod command to make the scripts executable, e.g. $ ch
 On a terminal:
 
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/catkin_ws/src/motion/scripts
 bash mul_launch1.sh
 ```
 
 On a second terminal:
 
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/catkin_ws/src/motion/scripts
 bash mul_launch2.sh
 ```
 
@@ -59,7 +59,7 @@ number could be any integer from 0 to 3.
 
 * or to run rand_walks node for all drones simultaneously: 
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/catkin_ws/src/motion/scripts
 bash rand_walks.sh
 ```
 *If you want to fly less drones you have to open rand_walks.sh script and comment out unwanted drones.
@@ -83,11 +83,11 @@ number could be any integer from 0 to 3.
 
 * or to run plot node for all drones simultaneously:
 
-Asuming that you downloaded and made executable the scripts from the [script](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/script) folder as described above.
+Asuming that you downloaded and made executable the scripts from the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder as described above.
 
 On a terminal run: 
 ```
-cd ~/catkin_ws/src/motion/script
+cd ~/catkin_ws/src/motion/scripts
 bash plots.sh
 ```
 *If you want to plot less drones you have to open rand_walks.sh script and comment out unwanted drones
