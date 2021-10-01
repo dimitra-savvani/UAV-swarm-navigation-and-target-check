@@ -22,7 +22,7 @@ cd catkin_ws
 catkin build
 ```
 
-## Do the following to enable custom message usage
+## Do the following to create the custom msg and srv.
 
 * In the `CMakeList.txt` (which is under the src/motion folder of your catkin workspace), add the following lines:
 
@@ -30,7 +30,7 @@ catkin build
 ```
 message_generation
 ```
-2. Replace
+2. Remove # to uncomment the following lines:
 ```
 ## Generate messages in the 'msg' folder
 # add_message_files(
@@ -39,12 +39,27 @@ message_generation
 #   Message2.msg
 # )
 ```
-with
+and then replace the stand in Message*.msg files with your .msg file
 ```
 # Generate messages in the 'msg' folder
 add_message_files(
   FILES
   take_off.msg
+)
+```
+Also remove # to uncomment the following lines:
+```
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
+```
+And replace the placeholder Service*.srv files for our service file:
+```
+add_service_files(
+  FILES
+  next_step.srv
 )
 ```
 3. Also replace
