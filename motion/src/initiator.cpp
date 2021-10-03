@@ -6,6 +6,7 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <motion/next_step.h>
 // #include <motion/take_off.h>
 
 using namespace std;
@@ -100,9 +101,13 @@ geometry_msgs::PoseStamped avoid_on_goal_collision(string ID, geometry_msgs::Pos
 /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
 coordinates to the standard ENU frame and vice-versa. */
 
-void request_next_step(string ID){
+void request_next_step(string ID, motion::next_step next_step){
 
-    has_reached_step_point = false;   
+    /* has_reached_step_point = false;   
+
+    next_step.request.ask_next_step = true;
+
+    next_step_client */
 
     // next_step_local =local_to_global_coords(ID, target_point_global, -1); //pass local goal position to geometry_msgs::PoseStamped variable
     // //ROS_INFO_STREAM("uav" << ID << " 's local target is/n x: " << next_step_local.pose.position.x << "\ty: " << next_step_local.pose.position.y << "\tz: " <<  next_step_local.pose.position.z);
@@ -122,7 +127,9 @@ int main(int argc, char **argv)
     string ID = argv[1]; // to discriminate the drones and init a diffrent node for each one
     string uav = "uav" + ID;
     ros::init(argc, argv, uav);
+    //ros::init(argc, argv, "next_step_client_for_" + uav);
     ros::NodeHandle nh;
+    //ros::NodeHandle nh1(nh); // nh parent of nh1
     
 
     /* Subscribers */
@@ -159,6 +166,9 @@ int main(int argc, char **argv)
 
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
     (uav + "/mavros/set_mode"); //client to request mode change
+
+    ros::ServiceClient next_step_client = nh.serviceClient<motion::next_step>
+    (uav + "/motion/next_step");
 
 
 
@@ -216,21 +226,33 @@ int main(int argc, char **argv)
             }
         }
 
+        motion::next_step next_step;
         if(!has_reached_take_off_point){ 
             next_step_local = take_off_point_local; // until it reaches take off setpoint
         } else {
             if (has_reached_step_point)
             {
-                request_next_step(ID); // when it reaches every point request the next step(it is stored in next_step_local)
+                // request_next_step(ID, next_step); // when it reaches every point request the next step(it is stored in next_step_local)
+                has_reached_step_point = false;   
+
+                next_step.request.request_next_step = true;
+                next_step.request.requested_next_step = next_step_local;
+
+                if (next_step_client.call(next_step)){
+
+                    next_step_local = next_step.response.response_next_step;
+                }
+
+                ROS_INFO_STREAM("published next_step_local " << next_step_local.pose.position << " for " << uav);
             }
         }
         
         
         next_step_local_pub.publish(next_step_local); // keep streaming setpoints
-        ROS_INFO_STREAM("published next_step_local " << next_step_local.pose.position << " for " << uav);
+        // ROS_INFO_STREAM("published next_step_local " << next_step_local.pose.position << " for " << uav);
 
         target_point_global_pub.publish(target_point_global); // for ploting goal positions at plot.py
-        //ROS_INFO_STREAM(uav << " 's global target point is/n x: " << target_point_global.pose.position.x << "/ty: " << target_point_global.pose.position.y << "/tz: " << target_point_global.pose.position.z);
+        // ROS_INFO_STREAM(uav << " 's global target point is/n x: " << target_point_global.pose.position.x << "/ty: " << target_point_global.pose.position.y << "/tz: " << target_point_global.pose.position.z);
 
         geometry_msgs::PoseStamped position_global = local_to_global_coords(ID, position_local, 1);
         position_global_pub.publish(position_global);
