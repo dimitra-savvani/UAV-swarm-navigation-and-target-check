@@ -83,10 +83,10 @@ if __name__ == "__main__":
     for i in range(swarmPopulation):
         graph_for_UAV.append(GridWorld(X_DIM, Y_DIM)) # create a graph for each drone seperately
         k_m.append(0) # initialize k+m for all UAVs to 0
-    nav_node = Navigator()
+    nav_node = Navigator(swarmPopulation)
 
     starting_point_for_UAV = []
-    (starting_point_for_UAV) = nav_node.starting_point_func(swarmPopulation) # read initial UAVs position
+    (starting_point_for_UAV) = nav_node.starting_point_func() # read initial UAVs position
 
     # trrr = nav_node.navigator()
     target_point = 'x25y25'
