@@ -30,7 +30,7 @@ catkin build
 
 Download or move (if you have already downloaded as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)) the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder, and place it in the motion folder. 
 
-Don' t forget to use the chmod command to make the scripts executable, e.g. $ chmod a+x run_script.sh
+Don' t forget to use the chmod command to make the scripts executable, e.g. $ chmod +x run_script.sh
 
 
 On a terminal:
