@@ -104,7 +104,7 @@ roslaunch px4 posix_sitl.launch
 
 Download the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder, and place it wherever you want (lets assume you placed them in your Home folder).
 
-Use the chmod command to make the scripts executable, e.g. $ chmod a+x run_script.sh
+Use the chmod command to make the scripts executable, e.g. $ chmod +x run_script.sh
 
 Now on terminal 1:
 ```
