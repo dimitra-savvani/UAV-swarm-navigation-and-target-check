@@ -2,15 +2,16 @@
 
 import heapq
 import pygame
+import sys
 
-from nav_node import Navigator
+import rospy
+from rospy.client import spin
+from std_msgs.msg import String
+
 from graph import Node, Graph
 from grid import GridWorld
 from utils import stateNameToCoords
 from d_star_lite import initDStarLite, moveAndRescan
-
-# Declare swarm population
-swarmPopulation = 4
 
 
 # Define some colors
@@ -67,6 +68,9 @@ screen = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
 # Set title of screen
 pygame.display.set_caption("D* Lite Path Planning")
 
+# Declare swarm population
+swarmPopulation = int(sys.argv[1])
+
 # Loop until the user clicks the close button or all Uavs reach destination.
 done = []
 for i in range(swarmPopulation +1):
@@ -77,27 +81,49 @@ for i in range(swarmPopulation +1):
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
 
+
+""" ******************* """
+""" CALLBACKS """
+""" ******************* """
+
+
+def starting_point_cb(starting_point, args):
+    ID = args
+    starting_point_for_UAV[ID] = starting_point.data
+    print("starting_point_cb for uav", ID, starting_point.data)
+
 if __name__ == "__main__":
+
+    # global variable for UAV's starting position for pygame
+    starting_point_for_UAV = [] 
+
     graph_for_UAV = []
     k_m = []
+
+    rospy.init_node('main_node', anonymous=False)
+    for i in range(swarmPopulation):
+        pygame_position_topic =  "uav" + str(i) + "/motion/pygame/position"
+        starting_point_for_UAV.append('none')
+        #starting_point_for_UAV.append(rospy.wait_for_message(pygame_position_topic, String, timeout=None))
+        rospy.Subscriber(pygame_position_topic, String, starting_point_cb, (i))
+        rospy.spin()
+
+    
+
     for i in range(swarmPopulation):
         graph_for_UAV.append(GridWorld(X_DIM, Y_DIM)) # create a graph for each drone seperately
         k_m.append(0) # initialize k+m for all UAVs to 0
-    nav_node = Navigator(swarmPopulation)
-
-    starting_point_for_UAV = []
-    (starting_point_for_UAV) = nav_node.starting_point_func() # read initial UAVs position
-
-    # trrr = nav_node.navigator()
+        #starting_point_for_UAV.append(navigator[i].get_starting_point(i)) # read initial UAVs position
+    
     target_point = 'x25y25'
     target_coords = stateNameToCoords(target_point)
-    nav_node.next_step_to_target(target_coords)
+    #navigator[0].set_target(target_coords) # set target for the swarm 
 
     queue = []
     current_position_for_UAV = []
     pos_coords = []
     for i in range(swarmPopulation):
-        graph_for_UAV[i].setStart(starting_point_for_UAV[i],) # set initial UAV position for each drone, to its graph
+        graph_for_UAV[i].setStart(starting_point_for_UAV[i]) # set initial UAV position for each drone, to its graph
         
         graph_for_UAV[i].setGoal(target_point) # set the goal position for each drone, to its graph
         
