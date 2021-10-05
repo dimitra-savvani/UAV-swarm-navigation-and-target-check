@@ -11,13 +11,18 @@
     />
 
     <node pkg="motion"
-            type="take_off.sh" name="run_take_off"
+            type="initiators.sh" name="run_initiators"
             output="screen"
     />
 
     <node pkg="motion"
-            type="main.py" name="run_main"
+            type="navigators.sh" name="run_navigators"
             output="screen"
     />
+
+    <!-- <node pkg="motion"
+            type="main.py" name="run_main"
+            output="screen"
+    /> -->
 
 </launch>
