@@ -1,0 +1,6 @@
+bool request_next_step
+geometry_msgs/PoseStamped requested_next_step
+
+---
+
+geometry_msgs/PoseStamped response_next_step
