@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from utils import ROS_to_pygame_coordinates
+from utils import ROS_to_Dstar_coordinates
 
 import rospy
 import sys
@@ -54,39 +54,40 @@ def get_starting_point_from_initiator(ID):
     }
     # rospy.loginfo("uav%s starting point is %s, %s (from nav_node)", i, starting_coordinate["ROS_x"], starting_coordinate["ROS_y"])
 
-    (starting_coordinate["pygame_x"], starting_coordinate["pygame_y"]) = ROS_to_pygame_coordinates(starting_coordinate["ROS_x"], starting_coordinate["ROS_y"], 1)
+    (starting_coordinate["Dstar_x"], starting_coordinate["Dstar_y"]) = ROS_to_Dstar_coordinates(starting_coordinate["ROS_x"], starting_coordinate["ROS_y"], 1)
 
-    pygame_starting_point = String()
-    pygame_starting_point = "x" + str(starting_coordinate["pygame_x"]) + "y" + str(starting_coordinate["pygame_y"])
-    print("got_starting_point_from_initiator", pygame_starting_point)
+    Dstar_starting_point = String()
+    Dstar_starting_point = "x" + str(starting_coordinate["Dstar_x"]) + "y" + str(starting_coordinate["Dstar_y"])
+    print("got_starting_point_from_initiator", Dstar_starting_point)
 
-    return pygame_starting_point
+    return Dstar_starting_point
 
-def set_starting_point_to_pygame(ID, pygame_starting_point):
-    print("set_starting_point_to_pygame")
-    pygame_position_topic = "uav" + str(ID) + "/motion/pygame/position"
+
+def set_starting_point_to_Dstar(ID, Dstar_starting_point):
+    print("set_starting_point_to_Dstar")
+    Dstar_position_topic = "uav" + str(ID) + "/motion/Dstar/position"
     
-    starting_point_pub = rospy.Publisher(pygame_position_topic, String, queue_size=1)
+    starting_point_pub = rospy.Publisher(Dstar_position_topic, String, queue_size=1)
     
     published = False
     rate = rospy.Rate(1) # 10hz
-    while not published:
+    while not published: # Publish once
         connections = starting_point_pub.get_num_connections()
         if connections > 0:
-            starting_point_pub.publish(pygame_starting_point) 
+            starting_point_pub.publish(Dstar_starting_point) 
             published = True
         else:
             rate.sleep  
-        # rate.sleep() 
+ 
 
 def set_target(target_coords):
     target_topic = "motion/position/global/target"
 
     target_coordinate = {
-        "pygame_x" : target_coords[0],
-        "pygame_y" : target_coords[1]
+        "Dstar_x" : target_coords[0],
+        "Dstar_y" : target_coords[1]
     }
-    (target_coordinate["ROS_x"], target_coordinate["ROS_y"]) = ROS_to_pygame_coordinates(target_coordinate["pygame_x"], target_coordinate["pygame_y"], -1)
+    (target_coordinate["ROS_x"], target_coordinate["ROS_y"]) = ROS_to_Dstar_coordinates(target_coordinate["Dstar_x"], target_coordinate["Dstar_y"], -1)
     
     
     target_pub = rospy.Publisher(target_topic, PoseStamped, queue_size=10)
@@ -127,5 +128,5 @@ if __name__ == "__main__":
     """ PUBLISHERS """
     
 
-    set_starting_point_to_pygame(ID, get_starting_point_from_initiator(ID))
-    #rospy.spin()
+    set_starting_point_to_Dstar(ID, get_starting_point_from_initiator(ID))
+    

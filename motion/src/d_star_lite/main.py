@@ -86,15 +86,15 @@ clock = pygame.time.Clock()
 """ CALLBACKS """
 """ ******************* """
 
-
+""" # rospy.Subscriber(Dstar_position_topic, String, starting_point_cb, (i))
 def starting_point_cb(starting_point, args):
     ID = args
     starting_point_for_UAV[ID] = starting_point.data
-    print("starting_point_cb for uav", ID, starting_point.data)
+    print("starting_point_cb for uav", ID, starting_point.data) """
 
 if __name__ == "__main__":
 
-    # global variable for UAV's starting position for pygame
+    # global variable for UAV's starting position for Dstar
     starting_point_for_UAV = [] 
 
     graph_for_UAV = []
@@ -102,13 +102,10 @@ if __name__ == "__main__":
 
     rospy.init_node('main_node', anonymous=False)
     for i in range(swarmPopulation):
-        pygame_position_topic =  "uav" + str(i) + "/motion/pygame/position"
-        starting_point_for_UAV.append('none')
-        #starting_point_for_UAV.append(rospy.wait_for_message(pygame_position_topic, String, timeout=None))
-        rospy.Subscriber(pygame_position_topic, String, starting_point_cb, (i))
-        rospy.spin()
+        Dstar_position_topic =  "uav" + str(i) + "/motion/Dstar/position"
+        starting_point = rospy.wait_for_message(Dstar_position_topic, String, timeout=None) # Subscribe once
+        starting_point_for_UAV.append(starting_point.data)
 
-    
 
     for i in range(swarmPopulation):
         graph_for_UAV.append(GridWorld(X_DIM, Y_DIM)) # create a graph for each drone seperately
