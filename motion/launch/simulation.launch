@@ -15,14 +15,19 @@
             output="screen"
     />
 
-    <node pkg="motion"
+    <!-- <node pkg="motion"
             type="navigators.sh" name="run_navigators"
             output="screen"
-    />
+    /> -->
 
     <!-- <node pkg="motion"
             type="main.py" name="run_main"
             output="screen"
     /> -->
+
+    <node pkg="motion"
+            type="main.sh" name="run_mian"
+            output="screen"
+    />
 
 </launch>

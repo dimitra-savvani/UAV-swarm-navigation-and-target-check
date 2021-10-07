@@ -59,7 +59,7 @@ add_message_files(
 # Generate services in the 'srv' folder
 add_service_files(
   FILES
-  next_step.srv
+  new_point.srv
   ros_to_Dstar.srv
 )
 
