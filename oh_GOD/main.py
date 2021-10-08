@@ -8,12 +8,12 @@ import rospy
 from rospy.client import spin
 from std_msgs.msg import String
 from geometry_msgs.msg import PoseStamped
+from motion.srv import new_point, new_pointResponse
 
 from graph import Node, Graph
 from grid import GridWorld
 from utils import *
 from d_star_lite import initDStarLite, moveAndRescan
-from ROS_functions import *
 
 
 
@@ -84,7 +84,22 @@ for i in range(swarmPopulation +1):
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
 
-# ROS things
+
+""" ******************* """
+""" CALLBACKS """
+""" ******************* """
+
+""" # rospy.Subscriber(Dstar_position_topic, String, starting_point_cb, (i))
+def starting_point_cb(starting_point, args):
+    ID = args
+    starting_point_for_UAV[ID] = starting_point.data
+    print("starting_point_cb for uav", ID, starting_point.data) """
+
+""" ******************* """
+""" SERVICE HANDLERS """
+""" ******************* """
+def target_point_handler(req, send_target_point):
+    return new_pointResponse(req.requested_new_point, send_target_point)
 
 
 if __name__ == "__main__":
@@ -93,18 +108,80 @@ if __name__ == "__main__":
     graph_for_UAV = []
     k_m = []
 
+    """ PUBLISHERS """
+
     rospy.init_node('main_node', anonymous=False)
 
-    for ID in range(swarmPopulation):
+    for i in range(swarmPopulation):
         graph_for_UAV.append(GridWorld(X_DIM, Y_DIM)) # create a graph for each drone seperately
         k_m.append(0) # initialize k+m for all UAVs to 0
-        starting_point_for_UAV.append(get_initial_position(ID))
+        #starting_point_for_UAV.append(navigator[i].get_starting_point(i)) # read initial UAVs position
+    
+    
+        """ Dstar_position_topic =  "uav" + str(i) + "/motion/Dstar/position"
+        starting_point = rospy.wait_for_message(Dstar_position_topic, String, timeout=None) # Subscribe once 
+        starting_point_for_UAV.append(starting_point.data)
+        print("point1") """
+    for i in range(swarmPopulation):
+        ROS_position_topic = "uav" + str(i) + "/motion/position/global"
+    
+        raw_ROS_starting_point = rospy.wait_for_message(ROS_position_topic, PoseStamped, timeout=None) # Subscriber to `ROS_position_topic_for_UAV[i]` only for one time
+        
+        starting_coordinate = { 
+            "ROS_x" : int(round(raw_ROS_starting_point.pose.position.x)), # round coordinates to match the d* lite standards
+            "ROS_y" : int(round(raw_ROS_starting_point.pose.position.y)) # round coordinates to match the d* lite standards
+        }
+        # rospy.loginfo("uav%s starting point is %s, %s (from nav_node)", i, starting_coordinate["ROS_x"], starting_coordinate["ROS_y"])
 
-    # starting_point_for_UAV = ['x25y25', 'x20y20', 'x35y35','x30y30']
+        (starting_coordinate["Dstar_x"], starting_coordinate["Dstar_y"]) = ROS_to_Dstar_coordinates(starting_coordinate["ROS_x"], starting_coordinate["ROS_y"], 1)
+
+        starting_point_for_UAV.append("x" + str(starting_coordinate["Dstar_x"]) + "y" + str(starting_coordinate["Dstar_y"]))
+        print("got_starting_point_from_initiator", starting_point_for_UAV[i], i)
+
+    """ pool = mp.Pool(mp.cpu_count())
+    
+    starting_point_for_UAV = pool.map(get_initial_position, [ID for ID in range(swarmPopulation)])
+
+    pool.close() """
 
     target_point = 'x25y25'
     target_coords = stateNameToCoords(target_point)
-    set_target_point(target_coords)
+
+    send_target_point = PoseStamped()
+    (send_target_point.pose.position.x, send_target_point.pose.position.y) = ROS_to_Dstar_coordinates(target_coords[0], target_coords[0], -1)
+    send_target_point.pose.position.z = 2
+
+    target_point_service = "motion/position/global/target"
+    target_point_ser = rospy.Service(target_point_service, new_point, lambda msg: target_point_handler(msg, send_target_point))
+    #SERVICE VERSION
+
+    """ target_topic = "motion/position/global/target"
+
+    target_coordinate = {
+        "Dstar_x" : target_coords[0],
+        "Dstar_y" : target_coords[1]
+    }
+    (target_coordinate["ROS_x"], target_coordinate["ROS_y"]) = ROS_to_Dstar_coordinates(target_coordinate["Dstar_x"], target_coordinate["Dstar_y"], -1)
+    
+    
+    target_pub = rospy.Publisher(target_topic, PoseStamped, queue_size=10)
+    
+
+    ROS_target_coordinate = PoseStamped()
+    ROS_target_coordinate.pose.position.x = target_coordinate["ROS_x"]
+    ROS_target_coordinate.pose.position.y = target_coordinate["ROS_y"]
+    ROS_target_coordinate.pose.position.z = 2 
+    
+    target_published = False
+    rate = rospy.Rate(1) # 1Hz
+    while not target_published: # Publish once
+        connections = target_pub.get_num_connections()
+        if connections > 0:
+            target_pub.publish(ROS_target_coordinate)
+            rospy.loginfo("global target point is: %s, %s, %s", target_coordinate["ROS_x"], target_coordinate["ROS_y"], ROS_target_coordinate.pose.position.z)
+            target_published = True
+        else:
+            rate.sleep """
 
     queue = []
     current_position_for_UAV = []
