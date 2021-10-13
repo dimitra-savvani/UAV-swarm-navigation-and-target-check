@@ -1,7 +1,6 @@
 bool value
-geometry_msgs/PoseStamped new_point
 
 ---
 
-bool value
+bool ready
 geometry_msgs/PoseStamped new_point

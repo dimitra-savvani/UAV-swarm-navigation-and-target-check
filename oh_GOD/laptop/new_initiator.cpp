@@ -3,10 +3,12 @@
 #include <cstdlib>
 #include <time.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Point.h>
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 #include <motion/new_point.h>
+#include <motion/flag.h>
 
 using namespace std;
 
@@ -14,8 +16,32 @@ mavros_msgs::State current_state;
 geometry_msgs::PoseStamped position_local;
 geometry_msgs::PoseStamped take_off_point_local;
 geometry_msgs::PoseStamped take_off_point_global;
-geometry_msgs::PoseStamped new_setpoint_local;
+geometry_msgs::PoseStamped setpoint_local;
 geometry_msgs::PoseStamped target_point_global;
+motion::new_point new_setpoint_global_msg;
+geometry_msgs::PoseStamped setpoint_global;
+
+bool request_new_setpoint = false;
+
+/* ******************* */
+/* SERVICE SERVER HANLDLERS */
+/* ******************* */
+
+bool reached_setpoint_handler(motion::flag::Request &req, motion::flag::Response &res){
+    res.value = request_new_setpoint;
+    return true;
+}
+
+/* bool reached_new_point_handler(motion::flag::Request &req, motion::flag::Response &res){
+    res.value = false;
+    has_reached_setpoint = false;
+    return true;
+} */
+
+
+/* ******************* */
+/* CALLBACKS */
+/* ******************* */
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg){ // current state of the autopilot 
     current_state = *msg;
@@ -50,6 +76,18 @@ geometry_msgs::PoseStamped local_to_global_coords(string ID, geometry_msgs::Pose
     return pos;
 }
 
+bool has_UAV_reached_setpoint(geometry_msgs::Point P_setpoint_local, geometry_msgs::Point P_position_local){
+    if(abs(P_setpoint_local.x - P_position_local.x)<0.1){
+        if(abs(P_setpoint_local.y - P_position_local.y)<0.1){
+            if(abs(P_setpoint_local.z - P_position_local.z)<0.1){ //if drone reaches goal take_off position
+                return true;
+            }
+        }
+    }
+    ROS_INFO_STREAM(P_setpoint_local <<"\nset and pos\n" << P_position_local);
+    return false;
+}
+
 /* ******************* */
 /* NODE */
 /* ******************* */
@@ -67,13 +105,15 @@ int main(int argc, char **argv)
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
     (uav + "/mavros/state", 10, state_cb); //instantiate a publisher to publish the commanded local position
 
+    ros::Subscriber position_local_sub = nh.subscribe<geometry_msgs::PoseStamped> 
+    (uav + "/mavros/local_position/pose", 10, position_local_cb);
 
     /* Publishers */
 
     ros::Publisher new_setpoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/mavros/setpoint_position/local", 10);
 
-    ros::Publisher target_point_global_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher take_off_point_global_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/motion/position/global", 1);
 
     /* Service Clients */
@@ -86,6 +126,17 @@ int main(int argc, char **argv)
 
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
     (uav + "/mavros/set_mode"); //client to request mode change
+
+    ros::ServiceClient setpoint_client = nh.serviceClient<motion::new_point>
+    (uav + "/motion/position/global/setpoint");
+
+    /* Service Server */
+
+    ros::ServiceServer reached_setpoint_server = nh.advertiseService
+    (uav + "/motion/reached_setpoint", &reached_setpoint_handler); 
+
+    /* ros::ServiceServer reached_new_point_server = nh.advertiseService
+    (uav + "/motion/reached_new_point", &reached_new_point_handler); */
 
     /* PX4 has a timeout of 500ms between two Offboard commands. If this timeout is exceeded, the commander will fall 
     back to the last mode the vehicle was in before entering Offboard mode. This is why the publishing rate must 
@@ -109,7 +160,7 @@ int main(int argc, char **argv)
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
         new_setpoint_local_pub.publish(take_off_point_local); // for mavros
-        target_point_global_pub.publish(take_off_point_global); // for Dstar
+        take_off_point_global_pub.publish(take_off_point_global); // for Dstar
         ros::spinOnce();
         rate.sleep();
     }
@@ -124,8 +175,7 @@ int main(int argc, char **argv)
         }
     }
 
-    new_setpoint_local = take_off_point_local;
-
+    setpoint_local = take_off_point_local;
     mavros_msgs::SetMode offb_set_mode;
     offb_set_mode.request.custom_mode = "OFFBOARD"; //We set the custom mode to OFFBOARD
 
@@ -135,6 +185,7 @@ int main(int argc, char **argv)
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
+ 
     ros::Time last_request = ros::Time::now();
     while(ros::ok()){
         if( current_state.mode != "OFFBOARD" && (ros::Time::now() - last_request > ros::Duration(5.0))){ //if mode is not offboard
@@ -151,7 +202,36 @@ int main(int argc, char **argv)
             }
         }
 
-        new_setpoint_local_pub.publish(new_setpoint_local); // keep streaming setpoints
+        
+        request_new_setpoint = has_UAV_reached_setpoint(setpoint_local.pose.position, position_local.pose.position);
+        ROS_INFO_STREAM("Is it ever getting "<<request_new_setpoint);
+        // When UAV reaches setpoint it publishes it to get a new one
+        /* if(abs(setpoint_local.pose.position.x - position_local.pose.position.x)<0.1){
+                if(abs(setpoint_local.pose.position.y - position_local.pose.position.y)<0.1){
+                    if(abs(setpoint_local.pose.position.z - position_local.pose.position.z)<0.1){ //if drone reaches goal take_off position
+                        request_new_setpoint = true; */
+                     
+        
+        while(request_new_setpoint){
+            new_setpoint_global_msg.request.value = request_new_setpoint;
+            if (setpoint_client.call(new_setpoint_global_msg)){
+                setpoint_global = new_setpoint_global_msg.response.new_point;
+                ROS_INFO_STREAM("UAV" << ID << "reached setpoint\n" << setpoint_global.pose.position);
+                setpoint_local = local_to_global_coords(ID, setpoint_global, -1);
+                request_new_setpoint = false;
+            }
+        }
+        
+        
+        
+            /*         } 
+                } 
+            } */
+       
+        //  όταν φτάνω στο setpoint θα κάνω true ένα variable που θα καλεί η main.py
+        //  θα παίρνω με service call το new_setpoint (εξω απο το if ? οχι)
+
+        new_setpoint_local_pub.publish(setpoint_local); // keep streaming setpoints
 
         ros::spinOnce();
         rate.sleep();

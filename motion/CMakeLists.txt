@@ -60,7 +60,7 @@ add_message_files(
 add_service_files(
   FILES
   new_point.srv
-  ros_to_Dstar.srv
+  flag.srv
 )
 
 ## Generate actions in the 'action' folder

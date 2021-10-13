@@ -37,8 +37,7 @@ def get_initial_position(ID):
     
 def set_target_point(target_coords):
     target_point = PoseStamped()
-    (target_point.pose.position.x, target_point.pose.position.y) = ROS_to_Dstar_coordinates(target_coords[0], target_coords[0], -1)
-    target_point.pose.position.z = 2
+    (target_point) = ROS_to_Dstar_coordinates(target_coords[0], target_coords[1], -1)
 
     target_point_service = "motion/position/global/target"
     target_point_ser = rospy.Service(target_point_service, new_point, lambda msg: target_point_handler(msg, target_point))
