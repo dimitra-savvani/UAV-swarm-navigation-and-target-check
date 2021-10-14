@@ -12,10 +12,16 @@ using namespace std;
 
 mavros_msgs::State current_state;
 geometry_msgs::PoseStamped position_local;
+mavros_msgs::SetMode offb_set_mode;
+mavros_msgs::CommandBool arm_cmd;
+motion::new_point target_point_global_msg;
 geometry_msgs::PoseStamped take_off_point_local;
 geometry_msgs::PoseStamped take_off_point_global;
-geometry_msgs::PoseStamped new_setpoint_local;
+geometry_msgs::PoseStamped waypoint_local;
 geometry_msgs::PoseStamped target_point_global;
+motion::new_point waypoint_global_msg;
+
+bool reached_waypoint = false;
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg){ // current state of the autopilot 
     current_state = *msg;
@@ -50,6 +56,18 @@ geometry_msgs::PoseStamped local_to_global_coords(string ID, geometry_msgs::Pose
     return pos;
 }
 
+bool has_reached_waypoint(geometry_msgs::Point waypoint_local_, geometry_msgs::Point position_local_){
+    if(abs(waypoint_local_.x - position_local_.x)<0.1){
+        if(abs(waypoint_local_.y - position_local_.y)<0.1){
+            if(abs(waypoint_local_.z - position_local_.z)<0.1){ //if drone reaches goal take_off position
+                return true;
+            }
+        }
+    }
+    ROS_INFO_STREAM(waypoint_local_ <<"\n:waypoint\nposition:\n" << position_local_);
+    return false;
+}
+
 /* ******************* */
 /* NODE */
 /* ******************* */
@@ -62,15 +80,20 @@ int main(int argc, char **argv)
     ros::init(argc, argv, uav);
     ros::NodeHandle nh;
 
+    bool reached_waypoint = false;
+    waypoint_global_msg.request.ID = stoi(ID); 
+
     /* Subscribers */
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
     (uav + "/mavros/state", 10, state_cb); //instantiate a publisher to publish the commanded local position
 
+    ros::Subscriber position_local_sub = nh.subscribe<geometry_msgs::PoseStamped> 
+    (uav + "/mavros/local_position/pose", 10, position_local_cb);
 
     /* Publishers */
 
-    ros::Publisher new_setpoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher waypoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/mavros/setpoint_position/local", 10);
 
     ros::Publisher target_point_global_pub = nh.advertise<geometry_msgs::PoseStamped>
@@ -86,6 +109,9 @@ int main(int argc, char **argv)
 
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
     (uav + "/mavros/set_mode"); //client to request mode change
+
+    ros::ServiceClient waypoint_client = nh.serviceClient<motion::new_point>
+    (uav + "/motion/position/global/waypoint");
 
     /* PX4 has a timeout of 500ms between two Offboard commands. If this timeout is exceeded, the commander will fall 
     back to the last mode the vehicle was in before entering Offboard mode. This is why the publishing rate must 
@@ -108,14 +134,13 @@ int main(int argc, char **argv)
     be rejected. Here, 100 was chosen as an arbitrary amount. */
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
-        new_setpoint_local_pub.publish(take_off_point_local); // for mavros
+        waypoint_local_pub.publish(take_off_point_local); // for mavros
         target_point_global_pub.publish(take_off_point_global); // for Dstar
         ros::spinOnce();
         rate.sleep();
     }
 
-    motion::new_point target_point_global_msg;
-    target_point_global_msg.request.value = true;
+    target_point_global_msg.request.ready = true;
     target_point_global_msg.response.ready = false;
     while(ros::ok() && !target_point_global_msg.response.ready){
         if (target_point_client.call(target_point_global_msg)){
@@ -124,15 +149,14 @@ int main(int argc, char **argv)
         }
     }
 
-    new_setpoint_local = take_off_point_local;
+    waypoint_local = take_off_point_local;
 
-    mavros_msgs::SetMode offb_set_mode;
     offb_set_mode.request.custom_mode = "OFFBOARD"; //We set the custom mode to OFFBOARD
 
     /* The rest of the code is pretty self explanatory. We attempt to switch to Offboard mode, after which we arm the quad 
     to allow it to fly. We space out the service calls by 5 seconds so to not flood the autopilot with the requests. In 
     the same loop, we continue sending the requested pose at the appropriate rate. */
-    mavros_msgs::CommandBool arm_cmd;
+    
     arm_cmd.request.value = true;
 
     ros::Time last_request = ros::Time::now();
@@ -151,7 +175,25 @@ int main(int argc, char **argv)
             }
         }
 
-        new_setpoint_local_pub.publish(new_setpoint_local); // keep streaming setpoints
+        if (!reached_waypoint){
+            reached_waypoint = has_reached_waypoint(waypoint_local.pose.position, position_local.pose.position);
+        }
+        else{
+            waypoint_global_msg.request.ready = true;
+            waypoint_global_msg.response.ready = false;
+            while(!waypoint_global_msg.response.ready){ // brakes when response is ready
+                if(waypoint_client.call(waypoint_global_msg)){
+                    ROS_INFO_STREAM("it was me");
+                    // ROS_INFO_STREAM(waypoint_global_msg.response.ready << " and waypoint is" << waypoint_global_msg.response.new_point);
+                }
+                waypoint_local_pub.publish(waypoint_local); // keep streaming setpoints
+            }
+            waypoint_local = local_to_global_coords(ID, waypoint_global_msg.response.new_point, -1);
+            reached_waypoint = false;
+        }
+
+
+        waypoint_local_pub.publish(waypoint_local); // keep streaming setpoints
 
         ros::spinOnce();
         rate.sleep();

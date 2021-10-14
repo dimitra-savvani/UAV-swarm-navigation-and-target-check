@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
-
-from utils import *
+from utils import stateNameToCoords, ROS_to_Dstar_coordinates
 
 import rospy
 from geometry_msgs.msg import PoseStamped
@@ -11,7 +10,7 @@ from motion.srv import new_point, new_pointResponse
 """ ******************* """
 
 def target_point_handler(req, target_point):
-    return new_pointResponse(req.value, target_point)
+    return new_pointResponse(req.ready, target_point)
 
 
 """ ******************* """
@@ -31,7 +30,7 @@ def get_initial_position(ID):
     
     (starting_coordinate["Dstar_x"], starting_coordinate["Dstar_y"]) = ROS_to_Dstar_coordinates(starting_coordinate["ROS_x"], starting_coordinate["ROS_y"], 1)
 
-    print("got_starting_point_from_initiator", ID)
+    print("got_starting_point_from_initiator of uav" + str(ID))
 
     return "x" + str(starting_coordinate["Dstar_x"]) + "y" + str(starting_coordinate["Dstar_y"])
     

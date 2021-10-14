@@ -1,4 +1,5 @@
-bool value
+bool ready
+int8 ID
 
 ---
 

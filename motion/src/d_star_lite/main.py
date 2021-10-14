@@ -4,14 +4,9 @@ import heapq
 import pygame
 import sys
 
-import rospy
-from rospy.client import spin
-from std_msgs.msg import String
-from geometry_msgs.msg import PoseStamped
 
 from graph import Node, Graph
 from grid import GridWorld
-from utils import *
 from d_star_lite import initDStarLite, moveAndRescan
 from ROS_functions import *
 
@@ -86,12 +81,30 @@ clock = pygame.time.Clock()
 
 # ROS things
 
+""" ******************* """
+""" SERVICE HANDLERS """
+""" ******************* """
+
+def waypoint_handler(req):
+    id = req.ID
+    reached_previous_waypoint_for_UAV[id] = req.ready 
+    
+    # When the waypoint is ready, UAV accepts the new waypoint, 
+    # and reached_previous_waypoint_for_UAV[id] is set to False until UAV reaches the new waypoint
+    if waypoint_ready[id]: 
+        reached_previous_waypoint_for_UAV[id] = False # set it to false to stop it from asking new waypoints
+    return new_pointResponse(waypoint_ready[id], new_waypoint)
+
 
 if __name__ == "__main__":
 
     starting_point_for_UAV = [] 
     graph_for_UAV = []
     k_m = []
+    s_new = [None]*swarmPopulation
+    reached_previous_waypoint_for_UAV = [False]*swarmPopulation
+    waypoint_ready = [False]*swarmPopulation
+    new_waypoint = PoseStamped()
 
     rospy.init_node('main_node', anonymous=False)
 
@@ -99,6 +112,8 @@ if __name__ == "__main__":
         graph_for_UAV.append(GridWorld(X_DIM, Y_DIM)) # create a graph for each drone seperately
         k_m.append(0) # initialize k+m for all UAVs to 0
         starting_point_for_UAV.append(get_initial_position(ID))
+        waypoint_service = "uav" + str(ID) +  "/motion/position/global/waypoint"
+        waypoint_ser = rospy.Service(waypoint_service, new_point, waypoint_handler)
 
     # starting_point_for_UAV = ['x25y25', 'x20y20', 'x35y35','x30y30']
 
@@ -109,7 +124,6 @@ if __name__ == "__main__":
     queue = []
     current_position_for_UAV = []
     pos_coords = []
-    print("point3")
     for i in range(swarmPopulation):
         graph_for_UAV[i].setStart(starting_point_for_UAV[i]) # set initial UAV position for each drone, to its graph
         
@@ -126,52 +140,28 @@ if __name__ == "__main__":
 
     basicfont = pygame.font.SysFont('Comic Sans MS', 16)
 
+    print("before main Loop")
+     
     # -------- Main Program Loop -----------
     while not done[-1]:
         for event in pygame.event.get():  # User did something
-            s_new = [None]*swarmPopulation 
-            if event.type == pygame.QUIT:  # If user `cliked close
+            if event.type == pygame.QUIT:  # If user clicked close
                 done[-1] = True  # Flag that we are done so we exit this loop
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                s_new[0], k_m[0] = moveAndRescan(graph_for_UAV[0], queue[0], current_position_for_UAV[0], VIEWING_RANGE, k_m[0])  
-                if s_new[0] == 'goal':
-                    print('Goal Reached! uav0')
-                    done[0] = True
-                else:
-                    print('setting current_position_for_UAV[0] to ', s_new[0])
-                    current_position_for_UAV[0] = s_new[0]
-                    pos_coords[0] = stateNameToCoords(current_position_for_UAV[0])
-                    # print('got pos coords: ', pos_coords)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                s_new[1], k_m[1] = moveAndRescan(graph_for_UAV[1], queue[1], current_position_for_UAV[1], VIEWING_RANGE, k_m[1])
-                if s_new[1] == 'goal':
-                    print('Goal Reached! uav1')
-                    done[1] = True
-                else:
-                    print('setting current_position_for_UAV[1] to ', s_new[1])
-                    current_position_for_UAV[1] = s_new[1]
-                    pos_coords[1] = stateNameToCoords(current_position_for_UAV[1])
-                    # print('got pos coords: ', pos_coords)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                s_new[2], k_m[2] = moveAndRescan(graph_for_UAV[2], queue[2], current_position_for_UAV[2], VIEWING_RANGE, k_m[2])
-                if s_new[2] == 'goal':
-                    print('Goal Reached! uav2')
-                    done[2] = True
-                else:
-                    print('setting current_position_for_UAV[2] to ', s_new[2])
-                    current_position_for_UAV[2] = s_new[2]
-                    pos_coords[2] = stateNameToCoords(current_position_for_UAV[2])
-                    # print('got pos coords: ', pos_coords)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                s_new[3], k_m[3] = moveAndRescan(graph_for_UAV[3], queue[3], current_position_for_UAV[3], VIEWING_RANGE, k_m[3])
-                if s_new[3] == 'goal':
-                    print('Goal Reached! uav3')
-                    done[3] = True
-                else:
-                    print('setting current_position_for_UAV[3] to ', s_new[3])
-                    current_position_for_UAV[3] = s_new[3]
-                    pos_coords[3] = stateNameToCoords(current_position_for_UAV[3])
-                    # print('got pos coords: ', pos_coords)
+            else:
+                for ID in range(swarmPopulation):
+                    if reached_previous_waypoint_for_UAV[ID] and not waypoint_ready[ID]:
+                        s_new[ID], k_m[ID] = moveAndRescan(graph_for_UAV[ID], queue[ID], current_position_for_UAV[ID], VIEWING_RANGE, k_m[ID])  
+                        if s_new[ID] == 'goal':
+                            print('Goal Reached! uav' + str(ID))
+                            done[ID] = True
+                        else:
+                            print('setting current_position_for_UAV' + str(ID) + ' to ' + s_new[ID])
+                            current_position_for_UAV[ID] = s_new[ID]
+                            pos_coords[ID] = stateNameToCoords(current_position_for_UAV[ID])
+                            (new_waypoint) = ROS_to_Dstar_coordinates(pos_coords[ID][0], pos_coords[ID][1], -1)
+                            waypoint_ready[ID] = True
+                            while waypoint_ready[ID]:
+                                waypoint_ready[ID] = reached_previous_waypoint_for_UAV[ID]
             if done[0] and done[1] and done[2] and done[3]:
                     done[-1] = True
 
