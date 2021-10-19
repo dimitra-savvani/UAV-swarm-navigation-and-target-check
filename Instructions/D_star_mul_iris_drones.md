@@ -113,7 +113,11 @@ On a terminal run:
 roslaunch motion simulation.launch
 ```
 
-## To have two world choices for Gazebo
+## To have two world choices to run Gazebo simulation
+
+* Open Files, go on your Home directory, click on the button with the three vertical lines on the right side of the upper bar of the window and select `Show Hiden Files`. Place the [models](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/models) folder under your .gazebo folder. Unselect the `Show Hiden Files` chioce.
+
+* Place the [worlds](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/worlds) folder under your motion folder.
 
 * Open your ~/src/Firmware/launch/simulation.launch in an editor and replace the line:
 
@@ -130,7 +134,7 @@ with:
 ```
 Save it and close it
 
-* Place the [worlds](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/worlds) folder under your motion folder.
+
 
 From now on you can run the simulation either on an empty world, or the forest world by commentig and uncommenting the corresponding lines in the ~/src/Firmware/launch/simulation.launch file.
 
