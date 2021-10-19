@@ -7,21 +7,27 @@
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 #include <motion/new_point.h>
+#include <motion/on_target.h>
 
 using namespace std;
+
+const int safe_distance = 2;
 
 mavros_msgs::State current_state;
 geometry_msgs::PoseStamped position_local;
 mavros_msgs::SetMode offb_set_mode;
 mavros_msgs::CommandBool arm_cmd;
-motion::new_point target_point_global_msg;
+motion::new_point target_global_msg;
 geometry_msgs::PoseStamped take_off_point_local;
 geometry_msgs::PoseStamped take_off_point_global;
 geometry_msgs::PoseStamped waypoint_local;
-geometry_msgs::PoseStamped target_point_global;
+geometry_msgs::PoseStamped target_global;
+geometry_msgs::PoseStamped target_local;
 motion::new_point waypoint_global_msg;
+motion::on_target on_target_msg;
 
 bool reached_waypoint = false;
+bool recieved_new_target = false;
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg){ // current state of the autopilot 
     current_state = *msg;
@@ -50,11 +56,11 @@ geometry_msgs::PoseStamped local_to_global_coords(string ID, geometry_msgs::Pose
         pos.pose.position.y += 15*direction;
     }
     else if (ID == "3"){
-        pos.pose.position.y =- 15*direction;
+        pos.pose.position.y -= 15*direction;
     }
 
     return pos;
-}
+} 
 
 bool has_reached_waypoint(geometry_msgs::Point waypoint_local_, geometry_msgs::Point position_local_){
     if(abs(waypoint_local_.x - position_local_.x)<0.1){
@@ -64,7 +70,18 @@ bool has_reached_waypoint(geometry_msgs::Point waypoint_local_, geometry_msgs::P
             }
         }
     }
-    ROS_INFO_STREAM(waypoint_local_ <<"\n:waypoint\nposition:\n" << position_local_);
+    return false;
+}
+
+bool too_close_to_target(string ID, geometry_msgs::Point waypoint_local_, geometry_msgs::Point target_local_){
+    
+    if(abs(waypoint_local_.x - target_local_.x)<safe_distance){
+        if(abs(waypoint_local_.y - target_local_.y)<safe_distance){
+            if(abs(waypoint_local_.z - target_local_.z)<safe_distance){ //if drone is close enough to the target
+                return true;
+            }
+        }
+    }
     return false;
 }
 
@@ -81,7 +98,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
 
     bool reached_waypoint = false;
-    waypoint_global_msg.request.ID = stoi(ID); 
+    // waypoint_global_msg.request.ID = stoi(ID); 
 
     /* Subscribers */
 
@@ -96,7 +113,7 @@ int main(int argc, char **argv)
     ros::Publisher waypoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/mavros/setpoint_position/local", 10);
 
-    ros::Publisher target_point_global_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher target_global_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/motion/position/global", 1);
 
     /* Service Clients */
@@ -112,6 +129,9 @@ int main(int argc, char **argv)
 
     ros::ServiceClient waypoint_client = nh.serviceClient<motion::new_point>
     (uav + "/motion/position/global/waypoint");
+
+    ros::ServiceClient on_target_client = nh.serviceClient<motion::on_target>
+    (uav + "/motion/on_target");
 
     /* PX4 has a timeout of 500ms between two Offboard commands. If this timeout is exceeded, the commander will fall 
     back to the last mode the vehicle was in before entering Offboard mode. This is why the publishing rate must 
@@ -135,20 +155,21 @@ int main(int argc, char **argv)
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
         waypoint_local_pub.publish(take_off_point_local); // for mavros
-        target_point_global_pub.publish(take_off_point_global); // for Dstar
+        target_global_pub.publish(take_off_point_global); // for Dstar
         ros::spinOnce();
         rate.sleep();
     }
 
-    target_point_global_msg.request.ready = true;
-    target_point_global_msg.response.ready = false;
-    while(ros::ok() && !target_point_global_msg.response.ready){
-        if (target_point_client.call(target_point_global_msg)){
-            target_point_global = target_point_global_msg.response.new_point;
-            ROS_INFO_STREAM("first target " << target_point_global.pose.position);
+    target_global_msg.request.ready = true;
+    target_global_msg.response.ready = false;
+    while(ros::ok() && !target_global_msg.response.ready){
+        if (target_point_client.call(target_global_msg)){
+            target_global = target_global_msg.response.new_point;
+            ROS_INFO_STREAM("first target " << target_global.pose.position);
         }
     }
 
+    target_local = local_to_global_coords(ID, target_global, -1);
     waypoint_local = take_off_point_local;
 
     offb_set_mode.request.custom_mode = "OFFBOARD"; //We set the custom mode to OFFBOARD
@@ -175,25 +196,40 @@ int main(int argc, char **argv)
             }
         }
 
+        
         if (!reached_waypoint){
             reached_waypoint = has_reached_waypoint(waypoint_local.pose.position, position_local.pose.position);
         }
         else{
             waypoint_global_msg.request.ready = true;
             waypoint_global_msg.response.ready = false;
+            ROS_INFO_STREAM("reached waypoint! Wainting for new waypoint...");
             while(!waypoint_global_msg.response.ready){ // brakes when response is ready
                 if(waypoint_client.call(waypoint_global_msg)){
-                    ROS_INFO_STREAM("it was me");
-                    // ROS_INFO_STREAM(waypoint_global_msg.response.ready << " and waypoint is" << waypoint_global_msg.response.new_point);
                 }
-                waypoint_local_pub.publish(waypoint_local); // keep streaming setpoints
+                waypoint_local_pub.publish(waypoint_local); // keep streaming previous setpoint until you get the new one
             }
             waypoint_local = local_to_global_coords(ID, waypoint_global_msg.response.new_point, -1);
             reached_waypoint = false;
+            ROS_INFO_STREAM("trying to reach waypoint...\n");
         }
 
+        if(too_close_to_target(ID, waypoint_local.pose.position, target_local.pose.position)){ // keep publishing target position until an new one is set
+            
+            on_target_msg.request.arrival = true;
+            on_target_msg.response.arrival_granted = false;
+            while(!on_target_msg.response.arrival_granted){
+                if(on_target_client.call(on_target_msg)){
+                    ROS_INFO_STREAM("UAV" << ID << " reached target");
+                }
+            }
 
-        waypoint_local_pub.publish(waypoint_local); // keep streaming setpoints
+            while(!recieved_new_target){
+                waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint to stay safely close to the target, ecxept if UAV gets a new target
+            }
+        }else{
+            waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint until UAV reaches it
+        }
 
         ros::spinOnce();
         rate.sleep();

@@ -1,5 +1,9 @@
 
 <launch>
+
+    <param name="swarmPopulation" type="int" value="4" />
+
+
     <node pkg="motion"
             type="mul_launch1.sh" name="run_mul_launch1"
             output="screen"
