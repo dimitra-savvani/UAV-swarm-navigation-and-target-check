@@ -1,4 +1,4 @@
-# Multiple Iris, navigate with D* algorithm, avoid each other and check if detected smoke corresponds to fire.
+# Multiple Iris, navigate with D* algorithm, avoid collisions and check if detected smoke corresponds to fire.
 
 ## Prerequisites
 Follow instructions on [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)
@@ -106,9 +106,32 @@ sudo apt-get install python-pygame
 ```
 ## Run simulation
 
-Download the [launch](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/launch) folder and place it in your motion folder.
+Place the [launch](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/launch) folder under your motion folder.
 
 On a terminal run:
 ```
 roslaunch motion simulation.launch
 ```
+
+## To have two world choices for Gazebo
+
+* Open your ~/src/Firmware/launch/simulation.launch in an editor and replace the line:
+
+```
+<arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
+```
+
+with:
+```
+<!-- choose the world you want to launch -->
+<!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> --> <!-- the original --> 
+<!-- <arg name="world" default="$(find motion)/worlds/empty.world"/>  -->
+<arg name="world" default="$(find motion)/worlds/forest.world"/>
+```
+Save it and close it
+
+* Place the [worlds](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/worlds) folder under your motion folder.
+
+From now on you can run the simulation either on an empty world, or the forest world by commentig and uncommenting the corresponding lines in the ~/src/Firmware/launch/simulation.launch file.
+
+
