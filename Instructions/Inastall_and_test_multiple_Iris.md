@@ -134,7 +134,7 @@ Kill all terminals
 
 * Download [files_for_mul_iris](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/files_for_mul_Iris)
 
-* Paste .launch files under launch folder (which is under src/Firmware folder)
+* Paste .launch files under ~/src/Firmware/launch
 
 *To control how many drones you want to be launched, when you launch multiple drones, comment or uncomment coresponding code lines on add_sdf.launch (if you need more than 10 drones, you have to add some sdf files as well.)
 
