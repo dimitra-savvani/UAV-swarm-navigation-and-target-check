@@ -1,4 +1,4 @@
-# Multiple Iris, navigate with D* algorithm, avoid each other and check if detected smoke corresponds to fire.
+# Multiple Iris, navigate with D* algorithm, avoid collisions and check if detected smoke corresponds to fire.
 
 ## Prerequisites
 Follow instructions on [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)
@@ -22,7 +22,7 @@ cd catkin_ws
 catkin build
 ```
 
-## Do the following to create the custom msg and srv.
+## Do the following to use the custom .srv files.
 
 * In the `CMakeList.txt` (which is under the src/motion folder of your catkin workspace), add the following lines:
 
@@ -31,23 +31,6 @@ catkin build
 message_generation
 ```
 2. Remove # to uncomment the following lines:
-```
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
-```
-and then replace the stand in Message*.msg files with your .msg file
-```
-# Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  take_off.msg
-)
-```
-Also remove # to uncomment the following lines:
 ```
 # add_service_files(
 #   FILES
@@ -123,9 +106,36 @@ sudo apt-get install python-pygame
 ```
 ## Run simulation
 
-Download the [launch](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/launch) folder and place it in your motion folder.
+Place the [launch](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/launch) folder under your motion folder.
 
 On a terminal run:
 ```
 roslaunch motion simulation.launch
 ```
+
+## To have two world choices to run Gazebo simulation
+
+* Open Files, go on your Home directory, click on the button with the three vertical lines on the right side of the upper bar of the window and select `Show Hiden Files`. Place the [models](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/models) folder under your .gazebo folder. Unselect the `Show Hiden Files` chioce.
+
+* Place the [worlds](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/worlds) folder under your motion folder.
+
+* Open your ~/src/Firmware/launch/simulation.launch in an editor and replace the line:
+
+```
+<arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
+```
+
+with:
+```
+<!-- choose the world you want to launch -->
+<!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> --> <!-- the original --> 
+<!-- <arg name="world" default="$(find motion)/worlds/empty.world"/>  -->
+<arg name="world" default="$(find motion)/worlds/forest.world"/>
+```
+Save it and close it
+
+
+
+From now on you can run the simulation either on an empty world, or the forest world by commentig and uncommenting the corresponding lines in the ~/src/Firmware/launch/simulation.launch file.
+
+
