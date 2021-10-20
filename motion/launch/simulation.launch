@@ -1,33 +1,34 @@
-
 <launch>
 
-    <param name="swarmPopulation" type="int" value="4" />
+        <!-- declare swarm population -->
+        <param name="swarmPopulation" type="int" value="4" />
 
+        <!-- declare height for swarm to fly -->
+        <param name="hight" type="int" value="3.5" />
 
-    <node pkg="motion"
-            type="mul_launch1.sh" name="run_mul_launch1"
-            output="screen"
-    />
+        <node pkg="motion"
+                type="mul_launch1.sh" name="run_mul_launch1"
+                output="screen"
+        />
 
-    <node pkg="motion"
-            type="mul_launch2.sh" name="run_mul_launch2"
-            output="screen"
-    />
+        <node pkg="motion"
+                type="mul_launch2.sh" name="run_mul_launch2"
+                output="screen"
+        />
 
-    <node pkg="motion"
-            type="initiators.sh" name="run_initiators"
-            output="screen"
-    />
+        <node pkg="motion"
+                type="initiators.sh" name="run_initiators"
+                output="screen"
+        />
 
+        <!-- <node pkg="motion"
+                type="main.py" name="run_main"
+                output="screen"
+        /> -->
 
-    <!-- <node pkg="motion"
-            type="main.py" name="run_main"
-            output="screen"
-    /> -->
-
-    <node pkg="motion"
-            type="main.sh" name="run_mian"
-            output="screen"
-    />
+        <node pkg="motion"
+                type="main.sh" name="run_mian"
+                output="screen"
+        />
 
 </launch>
