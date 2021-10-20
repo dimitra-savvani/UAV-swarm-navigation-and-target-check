@@ -119,16 +119,16 @@ roslaunch motion simulation.launch
 
 * Place the [worlds](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/worlds) folder under your motion folder.
 
-* Open your ~/src/Firmware/launch/simulation.launch in an editor and replace the line:
+* Open your ~/src/Firmware/launch/simulation.launch in an editor and comment out the original line of name argument for "world"(instead of ... you will have a path to a .world file):
 
 ```
-<arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
+<arg name="world" default="$(find mavlink_sitl_gazebo)/..."/> -->
 ```
 
 with:
 ```
 <!-- choose the world you want to launch -->
-<!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> --> <!-- the original --> 
+<!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/..."/> --> <!-- the original --> 
 <!-- <arg name="world" default="$(find motion)/worlds/empty.world"/>  -->
 <arg name="world" default="$(find motion)/worlds/forest.world"/>
 ```
