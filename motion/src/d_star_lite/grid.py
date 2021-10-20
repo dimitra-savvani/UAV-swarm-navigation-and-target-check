@@ -1,5 +1,5 @@
 from graph import Node, Graph
-
+from ROS_functions import locate_obstacles
 
 class GridWorld(Graph):
     def __init__(self, x_dim, y_dim, connect8=True):
@@ -14,10 +14,14 @@ class GridWorld(Graph):
         self.connect8 = connect8
         self.graph = {}
         # placing obstacles
-        self.cells[11][25] = -1
-        self.cells[25][11] = -1
-        self.cells[39][25] = -1
-        self.cells[25][39] = -1
+
+        obs = locate_obstacles()
+
+        for obstacle in obs.keys():
+            for x in range(obs[obstacle].x - 2, obs[obstacle].x + 2 ):
+                for y in range(obs[obstacle].y - 2, obs[obstacle].y + 2 ):
+                    self.cells[x][y] = -1
+
         self.generateGraphFromGrid()
         # self.printGrid()
 

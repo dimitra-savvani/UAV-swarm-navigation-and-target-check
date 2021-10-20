@@ -3,6 +3,7 @@ from utils import stateNameToCoords, ROS_to_Dstar_coordinates
 
 import rospy
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Point
 from motion.srv import new_point, new_pointResponse
 
 """ ******************* """
@@ -42,3 +43,12 @@ def set_target_point(target_coords):
     target_point_service = "motion/position/global/target"
     target_point_ser = rospy.Service(target_point_service, new_point, lambda msg: target_point_handler(msg, target_point))
 
+def locate_obstacles():
+
+    obs = {}
+    obs['Pine_Tree'] = Point()
+    obs['Pine_Tree'].x, obs['Pine_Tree'].y = -1, -4
+
+    (obs['Pine_Tree'].x, obs['Pine_Tree'].y) = ROS_to_Dstar_coordinates(obs['Pine_Tree'].x, obs['Pine_Tree'].y, 1)    
+
+    return obs 
