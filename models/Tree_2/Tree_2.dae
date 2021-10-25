@@ -3592,10 +3592,10 @@
     </library_effects>
     <library_images>
         <image id="ID7">
-            <init_from>Tree_texture/Tree_texture_1.jpg</init_from>
+            <init_from>Tree_2_texture/Tree_texture_1.jpg</init_from>
         </image>
         <image id="ID544">
-            <init_from>Tree_texture/Tree_texture_2.jpg</init_from>
+            <init_from>Tree_2_texture/Tree_texture_2.jpg</init_from>
         </image>
     </library_images>
     <library_nodes>

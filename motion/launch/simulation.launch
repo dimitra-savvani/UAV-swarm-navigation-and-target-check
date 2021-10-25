@@ -1,11 +1,31 @@
 <launch>
 
         <!-- declare swarm population -->
-        <param name="swarmPopulation" type="int" value="4" />
+        <param name="swarmPopulation" type="int" value="4" /> 
+        <!-- If you want to change the swarm population, you have to modify also: -->
+        <!--  -->
+        <!-- 1) local_to_global_coords() function, in initiator.cpp of motion package -->
+        <!-- 2) add or remove colors from uav_colors dictionary, in main.py of motion package -->
+        <!-- 3) add_sdf.launch file, which is located under ~/src/Firmware/launch -->
+        <!-- 4) initiators.sh, which is located under scripts directory, in motion package -->
+        <!-- 5) add or remove corresponding target in this file, below -->
+        <!-- 6) local_to_global_coords() function, in collision_avoidance.cpp of motion package, an maybe num_of_positions_kept variabel as well -->
 
-        <!-- declare height for swarm to fly -->
-        <param name="hight" type="int" value="3.5" />
+        <!-- declare flight height for swarm to fly -->
+        <param name="flightHeight" type="double" value="8" />
 
+        <!-- declare safe distnce from obstacles -->
+        <param name="safeDistance" type="double" value="1.5" />
+
+        <!-- declare target -->
+        <param name="catholicTarget" type="str" value="x25y25" />
+        <!-- if you set value to the folowing, it overides the catholic value for that specific UAV -->
+        <param name="Target0" type="str" value="x23y23" />
+        <param name="Target1" type="str" value="x23y23" />
+        <param name="Target2" type="str" value="x23y23" />
+        <param name="Target3" type="str" value="catholic" />
+
+        <!-- simiulation run -->
         <node pkg="motion"
                 type="mul_launch1.sh" name="run_mul_launch1"
                 output="screen"
@@ -28,6 +48,11 @@
 
         <node pkg="motion"
                 type="main.sh" name="run_mian"
+                output="screen"
+        />
+
+        <node pkg="motion"
+                type="collision_avoidance.sh" name="run_collision_avoidance"
                 output="screen"
         />
 

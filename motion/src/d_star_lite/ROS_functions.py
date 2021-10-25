@@ -36,19 +36,22 @@ def get_initial_position(ID):
     return "x" + str(starting_coordinate["Dstar_x"]) + "y" + str(starting_coordinate["Dstar_y"])
     
 
-def set_target_point(target_coords):
+def set_target_point(target_coords, ID):
     target_point = PoseStamped()
     (target_point) = ROS_to_Dstar_coordinates(target_coords[0], target_coords[1], -1)
 
-    target_point_service = "motion/position/global/target"
+    target_point_service = "uav" + str(ID) + "/motion/position/global/target"
     target_point_ser = rospy.Service(target_point_service, new_point, lambda msg: target_point_handler(msg, target_point))
 
 def locate_obstacles():
 
-    obs = {}
-    obs['Pine_Tree'] = Point()
-    obs['Pine_Tree'].x, obs['Pine_Tree'].y = -1, -4
+    # Dictionary to store obstacle positions
+    # the obstacle positions have to correspond to the .world file that is called
+    # the .world that is called, is specified in the  ~/src/Firmware/launch/simulation.launch 
+    obs = {} 
+    obs['telephone_pole'] = Point()
+    obs['telephone_pole'].x, obs['telephone_pole'].y = 3, 4
 
-    (obs['Pine_Tree'].x, obs['Pine_Tree'].y) = ROS_to_Dstar_coordinates(obs['Pine_Tree'].x, obs['Pine_Tree'].y, 1)    
+    (obs['telephone_pole'].x, obs['telephone_pole'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole'].x, obs['telephone_pole'].y, 1)    
 
     return obs 

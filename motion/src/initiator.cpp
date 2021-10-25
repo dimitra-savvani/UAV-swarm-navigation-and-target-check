@@ -11,7 +11,8 @@
 
 using namespace std;
 
-const int safe_distance = 2;
+double safeDistance;
+double flightHeight;
 
 mavros_msgs::State current_state;
 geometry_msgs::PoseStamped position_local;
@@ -75,9 +76,9 @@ bool has_reached_waypoint(geometry_msgs::Point waypoint_local_, geometry_msgs::P
 
 bool too_close_to_target(string ID, geometry_msgs::Point waypoint_local_, geometry_msgs::Point target_local_){
     
-    if(abs(waypoint_local_.x - target_local_.x)<safe_distance){
-        if(abs(waypoint_local_.y - target_local_.y)<safe_distance){
-            if(abs(waypoint_local_.z - target_local_.z)<safe_distance){ //if drone is close enough to the target
+    if(abs(waypoint_local_.x - target_local_.x)<safeDistance){
+        if(abs(waypoint_local_.y - target_local_.y)<safeDistance){
+            if(abs(waypoint_local_.z - target_local_.z)<safeDistance){ //if drone is close enough to the target
                 return true;
             }
         }
@@ -97,8 +98,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, uav);
     ros::NodeHandle nh;
 
-    bool reached_waypoint = false;
-    // waypoint_global_msg.request.ID = stoi(ID); 
+    if (ros::param::get("/flightHeight", flightHeight)){} // param /flightHeight declared in simulation.launch file of motion package
+    
+    if (ros::param::get("/safeDistance", safeDistance)){} // param /safeDistance declared in simulation.launch file of motion package
+    
+    bool reached_waypoint = false; 
 
     /* Subscribers */
 
@@ -113,13 +117,13 @@ int main(int argc, char **argv)
     ros::Publisher waypoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/mavros/setpoint_position/local", 10);
 
-    ros::Publisher target_global_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher take_off_global_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/motion/position/global", 1);
 
     /* Service Clients */
 
     ros::ServiceClient target_point_client = nh.serviceClient<motion::new_point>
-    ("motion/position/global/target");
+    (uav + "/motion/position/global/target");
 
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
     (uav + "/mavros/cmd/arming"); //client to request arming
@@ -148,14 +152,14 @@ int main(int argc, char **argv)
     }
 
     take_off_point_local = position_local; //initial position, when drones have not taken off yet
-    take_off_point_local.pose.position.z = 2; // set take off desired poisition 
+    take_off_point_local.pose.position.z = flightHeight; // set take off desired poisition 
     take_off_point_global = local_to_global_coords(ID, take_off_point_local, 1);
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
         waypoint_local_pub.publish(take_off_point_local); // for mavros
-        target_global_pub.publish(take_off_point_global); // for Dstar
+        take_off_global_pub.publish(take_off_point_global); // for Dstar
         ros::spinOnce();
         rate.sleep();
     }

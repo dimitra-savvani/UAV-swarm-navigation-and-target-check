@@ -1,4 +1,6 @@
 from geometry_msgs.msg import PoseStamped
+import rospy
+flightHeight = rospy.get_param("/flightHeight") # param /flightHeight declared in simulation.launch file of motion package
 
 def stateNameToCoords(name):
     return [int(name.split('x')[1].split('y')[0]), int(name.split('x')[1].split('y')[1])]
@@ -14,6 +16,6 @@ def ROS_to_Dstar_coordinates(in_x, in_y, direction):
         position = PoseStamped()
         position.pose.position.x = out_x
         position.pose.position.y = out_y
-        position.pose.position.z = 2
+        position.pose.position.z = flightHeight
         return position
 

@@ -17,46 +17,46 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){
 }
 
 geometry_msgs::PoseStamped current_position; // for comparing current position(local) to wanted goal location(local)
-void position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
+void current_position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
     current_position = *msg;
 }
 
-geometry_msgs::PoseStamped pose; // for setting wanted goal location (local coordinates) 
-geometry_msgs::PoseStamped global_pose; // for ploting goal positions at plot.py
+geometry_msgs::PoseStamped local_target; // for setting wanted goal location (local coordinates) 
+geometry_msgs::PoseStamped global_target; // for ploting goal positions at plot.py
 void give_target(string ID){
     /* cout << "dose x:" << endl;
-    cin >> pose.pose.position.x;
+    cin >> local_target.pose.position.x;
     cout << "dose y:" << endl;
-    cin >> pose.pose.position.y;
+    cin >> local_target.pose.position.y;
     cout << "dose z:" << endl;
-    cin >> pose.pose.position.z; */
+    cin >> local_target.pose.position.z; */
 
-    pose.pose.position.x = rand() % 30;
-    pose.pose.position.y = rand() % 30;
-    pose.pose.position.z = rand() % 5 + 1;
+    local_target.pose.position.x = rand() % 30;
+    local_target.pose.position.y = rand() % 30;
+    local_target.pose.position.z = rand() % 5 + 1;
 
-    global_pose.pose.position.x = pose.pose.position.x;
-    global_pose.pose.position.y = pose.pose.position.y;
+    global_target.pose.position.x = local_target.pose.position.x;
+    global_target.pose.position.y = local_target.pose.position.y;
 
     if (ID == "0"){
-        global_pose.pose.position.x = global_pose.pose.position.x + 15;
+        global_target.pose.position.x = global_target.pose.position.x + 15;
     }
     else if (ID == "1"){
-        global_pose.pose.position.x = global_pose.pose.position.x - 15;
+        global_target.pose.position.x = global_target.pose.position.x - 15;
     }
     else if (ID == "2"){
-        global_pose.pose.position.y = global_pose.pose.position.y + 15;
+        global_target.pose.position.y = global_target.pose.position.y + 15;
     }
     else if (ID == "3"){
-        global_pose.pose.position.y = global_pose.pose.position.y - 15;
+        global_target.pose.position.y = global_target.pose.position.y - 15;
     }
     // else if (ID == "4"){
-    //     global_pose.pose.position.x = global_pose.pose.position.x + 31;
+    //     global_target.pose.position.x = global_target.pose.position.x + 31;
     // }
 
     
 
-    ROS_INFO("%f\n%f\n%f\n", global_pose.pose.position.x, global_pose.pose.position.y, pose.pose.position.z);
+    ROS_INFO("%f\n%f\n%f\n", global_target.pose.position.x, global_target.pose.position.y, local_target.pose.position.z);
 }
 
 int main(int argc, char **argv)
@@ -73,9 +73,9 @@ int main(int argc, char **argv)
     arming and mode change. Note that for your own system, the "mavros" prefix might be different as it will 
     depend on the name given to the node in it's launch file. */
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>(uav + "/mavros/state", 10, state_cb);
-    ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/local", 10);
-    ros::Publisher global_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/global", 10);
-    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, position_cb);
+    ros::Publisher local_target_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/local", 10);
+    ros::Publisher global_target_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/motion/target_position/global", 10);
+    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, current_position_cb);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>(uav + "/mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>(uav + "/mavros/set_mode");
 
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
     be rejected. Here, 100 was chosen as an arbitrary amount. */
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
-        local_pos_pub.publish(pose);
+        local_target_pub.publish(local_target);
         ros::spinOnce();
         rate.sleep();
     }
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 
     /* The rest of the code is pretty self explanatory. We attempt to switch to Offboard mode, after which we arm the quad 
     to allow it to fly. We space out the service calls by 5 seconds so to not flood the autopilot with the requests. In 
-    the same loop, we continue sending the requested pose at the appropriate rate. */
+    the same loop, we continue sending the requested local_target at the appropriate rate. */
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
@@ -135,14 +135,14 @@ int main(int argc, char **argv)
             }
         }
 
-        local_pos_pub.publish(pose);
-        global_pos_pub.publish(global_pose);
+        local_target_pub.publish(local_target);
+        global_target_pub.publish(global_target);
 
 
-        if(abs(pose.pose.position.x - current_position.pose.position.x)<0.1){
-            if(abs(pose.pose.position.y - current_position.pose.position.y)<0.1){
-                if(abs(pose.pose.position.z - current_position.pose.position.z)<0.1){
-                    //give_target(ID); // uncomment to let drone get new goal when it reaches current goal
+        if(abs(local_target.pose.position.x - current_position.pose.position.x)<0.1){
+            if(abs(local_target.pose.position.y - current_position.pose.position.y)<0.1){
+                if(abs(local_target.pose.position.z - current_position.pose.position.z)<0.1){
+                    //give_target(ID); // uncomment to let drone get new target when it reaches current target
                 } 
             } 
         }

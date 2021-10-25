@@ -56,17 +56,31 @@
       <pose>-10 -11 0 0 0 0</pose>
     </include>
 
-    <!-- Simple Trees -->
+    <!--  Tree_1s -->
 
     <include>
-      <name>Simple Tree0</name>
-      <uri>model://Tree</uri>
+      <name>Tree_10</name>
+      <uri>model://Tree_1</uri>
+      <pose>6 7 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>Tree_11</name>
+      <uri>model://Tree_1</uri>
+      <pose>6 11 0 0 0 0</pose>
+    </include>
+
+    <!--  Tree_2s -->
+
+    <include>
+      <name>Tree_20</name>
+      <uri>model://Tree_2</uri>
       <pose>5 5 0 0 0 0</pose>
     </include>
 
     <include>
-      <name>Simple Tree1</name>
-      <uri>model://Tree</uri>
+      <name>Tree_21</name>
+      <uri>model://Tree_2</uri>
       <pose>5 9 0 0 0 0</pose>
     </include>
 
@@ -98,6 +112,14 @@
       <name>person_walking</name>
       <uri>model://person_walking</uri>
       <pose>-10 6 0 0 0 0</pose>
+    </include>
+
+    <!-- telephone_pole -->
+
+    <include>
+      <name>telephone_pole</name>
+      <uri>model://telephone_pole</uri>
+      <pose>3 4 0 0 0 0</pose>
     </include>
 
     <!-- soil ground -->

@@ -110,7 +110,7 @@ def scanForObstacles(graph, queue, s_current, scan_range, k_m):
                 if(graph.graph[state].children[neighbor] != float('inf')):
                     neighbor_coords = stateNameToCoords(state)
                     graph.cells[neighbor_coords[1]][neighbor_coords[0]] = -2
-                    print('Show obs')
+                    #print('Show obs')
                     graph.graph[neighbor].children[state] = float('inf')
                     graph.graph[state].children[neighbor] = float('inf')
                     updateVertex(graph, queue, state, s_current, k_m)

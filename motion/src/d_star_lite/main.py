@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 
 import heapq
 import pygame
@@ -66,7 +67,7 @@ screen = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
 pygame.display.set_caption("D* Lite Path Planning")
 
 # Declare swarm population
-swarmPopulation = rospy.get_param("/swarmPopulation")
+swarmPopulation = rospy.get_param("/swarmPopulation") # param /swarmPopulation declared in simulation.launch file of motion package
 
 # Loop until the user clicks the close button.
 done = False
@@ -143,21 +144,27 @@ if __name__ == "__main__":
         reached_target_check_service = "uav" + str(ID) +  "/motion/on_target"
         rospy.Service(reached_target_check_service, on_target, target_checker[ID].on_target_handler)
 
-    target_point = 'x25y25'
-    target_coords = stateNameToCoords(target_point)
-    set_target_point(target_coords)
+    catholicTarget = rospy.get_param("/catholicTarget") # param /catholicTarget declared in simulation.launch file of motion package
+    target_point_for_UAV = []
+    target_coords = [] 
+    for ID in range(swarmPopulation):
+        target_point_for_UAV.append(rospy.get_param("/Target"+str(ID))) # param /catholicTarget+str(ID) declared in simulation.launch file of motion package 
+        if target_point_for_UAV[ID] == "catholic":
+            target_point_for_UAV[ID] = catholicTarget
+        target_coords.append(stateNameToCoords(target_point_for_UAV[ID])) 
+        set_target_point(target_coords[ID], ID)
 
     queue = []
     current_position_for_UAV = []
     pos_coords = []
     for i in range(swarmPopulation):
         graph_for_UAV[i].setStart(starting_point_for_UAV[i]) # set initial UAV position for each drone, to its graph
-        
-        graph_for_UAV[i].setGoal(target_point) # set the goal position for each drone, to its graph
+  
+        graph_for_UAV[i].setGoal(target_point_for_UAV[i]) # set the goal position for each drone, to its graph
         
         queue.append([]) # list of lists for queues of each UAV
 
-        graph_for_UAV[i], queue[i], k_m[i] = initDStarLite(graph_for_UAV[i], queue[i], starting_point_for_UAV[i], target_point, k_m[i])
+        graph_for_UAV[i], queue[i], k_m[i] = initDStarLite(graph_for_UAV[i], queue[i], starting_point_for_UAV[i], target_point_for_UAV[i], k_m[i])
 
         current_position_for_UAV.append(starting_point_for_UAV[i])
 
@@ -231,13 +238,17 @@ if __name__ == "__main__":
                 #        screen.blit(text, textrect)
 
         # fill in goal cell with GREEN
-        pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * target_coords[0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * target_coords[1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2])
+        if catholicTarget in target_point_for_UAV: # if there is a catholic target, draw a green square to symbolize it
+                pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * target_coords[i][0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * target_coords[i][1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2])
         # print('drawing robot pos_coords: ', pos_coords)
         # draw moving robot, based on pos_coords
         
         robot_center = []
         for i in range(swarmPopulation):
 
+            if target_point_for_UAV[i] is not catholicTarget: # if a UAV has different target than the catholic, draw a square with the UAV's color to symbolize it
+                pygame.draw.rect(screen, uav_colors[i], [(MARGIN + WIDTH) * target_coords[i][0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * target_coords[i][1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2])
+            
             robot_center.append([int(pos_coords[i][0] * (WIDTH + MARGIN)) +  MARGIN, int(pos_coords[i][1] * (HEIGHT + MARGIN)) + MARGIN]) # drone appears at the upper left corner of a square
             
             # draw UAVs
