@@ -1,6 +1,6 @@
 # ROS_multiple_iris
 
-Multiple drones swarm to specific point to check if detected smoke corresponds to a fire.
+Drones swarm covers forest area and checks ordered ponints to detect if a fire has started.
 
 * [Instalation instraction](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md) 
 
