@@ -1,4 +1,4 @@
-# Multiple Iris, navigate with D* algorithm, avoid collisions and check if detected smoke corresponds to fire.
+# Multiple Iris, navigate with D* algorithm, avoid collisions and check if detected overheat corresponds to fire.
 
 ## Prerequisites
 Follow instructions on [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)
@@ -137,5 +137,19 @@ Save it and close it
 
 
 From now on you can run the simulation either on an empty world, or the forest world by commentig and uncommenting the corresponding lines in the ~/src/Firmware/launch/simulation.launch file.
+
+* Execute simulation
+
+On a terinal run:
+```
+source ~/catkin_ws/devel/setup.bash
+roslaunch motion simulation.launch
+```
+To simulate the detected overheat, on a second terminal run:
+```
+rosparam set /overheat_sensed_at 'x<x_coordinate>y<y_coordinate>'
+```
+instead of <x_coordinate> type a number between 0 and 69,
+instead of <y_coordinate> type a number between 0 and 55
 
 
