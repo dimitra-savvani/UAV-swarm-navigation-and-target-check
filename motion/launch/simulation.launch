@@ -18,11 +18,11 @@
         <param name="safeDistance" type="double" value="1.5" />
 
         <!-- declare target -->
-        <param name="catholicTarget" type="str" value="x25y25" />
+        <param name="catholicTarget" type="str" value="x50y50" />
         <!-- if you set value to the folowing, it overides the catholic value for that specific UAV -->
         <param name="Target0" type="str" value="x23y23" />
         <param name="Target1" type="str" value="x23y23" />
-        <param name="Target2" type="str" value="x23y23" />
+        <param name="Target2" type="str" value="catholic" />
         <param name="Target3" type="str" value="catholic" />
 
         <!-- simiulation run -->
@@ -51,9 +51,9 @@
                 output="screen"
         />
 
-        <node pkg="motion"
+        <!-- <node pkg="motion"
                 type="collision_avoidance.sh" name="run_collision_avoidance"
                 output="screen"
-        />
+        /> -->
 
 </launch>

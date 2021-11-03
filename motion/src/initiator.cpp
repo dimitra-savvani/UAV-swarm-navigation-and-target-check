@@ -47,17 +47,19 @@ void position_local_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // curr
 geometry_msgs::PoseStamped local_to_global_coords(string ID, geometry_msgs::PoseStamped pos, int direction){
     // direction controlls whether the coordinates are converted from local to global or from global to local, should either be 1 or -1.
     
+    pos.pose.position.x -= 34*direction;
+
     if (ID == "0"){
-        pos.pose.position.x += 15*direction;
+        pos.pose.position.y += 21*direction;
     }
     else if (ID == "1"){
-        pos.pose.position.x -= 15*direction;
+       pos.pose.position.y += 7*direction;
     }
     else if (ID == "2"){
-        pos.pose.position.y += 15*direction;
+        pos.pose.position.y -= 7*direction;
     }
     else if (ID == "3"){
-        pos.pose.position.y -= 15*direction;
+        pos.pose.position.y -= 21*direction;
     }
 
     return pos;

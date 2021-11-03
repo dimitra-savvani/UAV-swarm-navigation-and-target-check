@@ -51,8 +51,8 @@ grid[1][5] = 1
 # Initialize pygame
 pygame.init()
 
-X_DIM = 50
-Y_DIM = 50
+X_DIM = 70
+Y_DIM = 56
 VIEWING_RANGE = 3
 
 
@@ -110,8 +110,6 @@ class reached_target_check:
         id  = self.id
 
         made_it[id] = req.arrival
-        an_UAV_reached_target = req.arrival
-
         return on_targetResponse(req.arrival)
 
 
