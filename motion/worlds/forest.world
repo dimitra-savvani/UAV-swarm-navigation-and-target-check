@@ -387,6 +387,7 @@
       <uri>model://mud_box</uri>
       <pose>20 24 -0.2 0 0 1.5708</pose>
     </include>
+
     <include>
       <name>soil box45</name>
       <uri>model://mud_box</uri>
@@ -409,6 +410,90 @@
       <name>soil box48</name>
       <uri>model://mud_box</uri>
       <pose>-20 24 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box49</name>
+      <uri>model://mud_box</uri>
+      <pose>-30 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box50</name>
+      <uri>model://mud_box</uri>
+      <pose>-20 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box51</name>
+      <uri>model://mud_box</uri>
+      <pose>-10 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box52</name>
+      <uri>model://mud_box</uri>
+      <pose>0 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box53</name>
+      <uri>model://mud_box</uri>
+      <pose>10 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box54</name>
+      <uri>model://mud_box</uri>
+      <pose>20 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box55</name>
+      <uri>model://mud_box</uri>
+      <pose>30 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box56</name>
+      <uri>model://mud_box</uri>
+      <pose>-30 32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box57</name>
+      <uri>model://mud_box</uri>
+      <pose>-20 32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box58</name>
+      <uri>model://mud_box</uri>
+      <pose>-10 32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box59</name>
+      <uri>model://mud_box</uri>
+      <pose>0 32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box60</name>
+      <uri>model://mud_box</uri>
+      <pose>10 32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box61</name>
+      <uri>model://mud_box</uri>
+      <pose>20 32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box62</name>
+      <uri>model://mud_box</uri>
+      <pose>30 32 -0.2 0 0 1.5708</pose>
     </include>
     
   </world>

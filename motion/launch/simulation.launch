@@ -8,22 +8,23 @@
         <!-- 2) add or remove colors from uav_colors dictionary, in main.py of motion package -->
         <!-- 3) add_sdf.launch file, which is located under ~/src/Firmware/launch -->
         <!-- 4) initiators.sh, which is located under scripts directory, in motion package -->
-        <!-- 5) add or remove corresponding target in this file, below -->
+        <!-- 5) add or remove corresponding modes in this file, below -->
         <!-- 6) local_to_global_coords() function, in collision_avoidance.cpp of motion package, an maybe num_of_positions_kept variabel as well -->
 
         <!-- declare flight height for swarm to fly -->
-        <param name="flightHeight" type="double" value="8" />
+        <param name="patrolHeight" type="double" value="8" />
 
         <!-- declare safe distnce from obstacles -->
         <param name="safeDistance" type="double" value="1.5" />
 
-        <!-- declare target -->
-        <param name="catholicTarget" type="str" value="x50y50" />
-        <!-- if you set value to the folowing, it overides the catholic value for that specific UAV -->
-        <param name="Target0" type="str" value="x23y23" />
-        <param name="Target1" type="str" value="x23y23" />
-        <param name="Target2" type="str" value="catholic" />
-        <param name="Target3" type="str" value="catholic" />
+        <!-- declare initial mode for each UAV -->\
+        <param name="mode0" type="str" value="patrol" />
+        <param name="mode1" type="str" value="patrol" />
+        <param name="mode2" type="str" value="patrol" />
+        <param name="mode3" type="str" value="patrol" />
+
+       <!-- declare target where overheat is detected -->
+        <param name="overheat_sensed_at" type="str" value="" />
 
         <!-- simiulation run -->
         <node pkg="motion"

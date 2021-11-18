@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import heapq
+from pickle import TRUE
 import pygame
+from random import randint
 
 from graph import Node, Graph
 from grid import GridWorld
+from utils import stateNameToCoords, coordsToStateName
 from d_star_lite import initDStarLite, moveAndRescan
 from ROS_functions import *
 from motion.srv import on_target, on_targetResponse
@@ -28,8 +31,8 @@ colors = { 0: WHITE, 1: GREEN, -1: GRAY1, -2: GRAY2 }
 uav_colors = { 0: RED, 1: ORANGE, 2: LIGHTBLUE, 3: LIGHTPURPLE }
 
 # This sets the WIDTH and HEIGHT of each grid location
-WIDTH = 15
-HEIGHT = 15
+WIDTH = 12
+HEIGHT = 12
 
 # This sets the margin between each cell
 MARGIN = 1
@@ -52,10 +55,8 @@ grid[1][5] = 1
 pygame.init()
 
 X_DIM = 70
-Y_DIM = 56
+Y_DIM = 70 # if you change dimension change displacement accordingly in utils.py
 VIEWING_RANGE = 3
-
-
 
 
 # Set the HEIGHT and WIDTH of the screen
@@ -78,14 +79,71 @@ done = False
 made_it = [False]*(swarmPopulation +1)
 
 
-# Used to manage how fast the screen updates
+# To manage how fast the screen updates
 clock = pygame.time.Clock()
+
+""" ******************* """
+""" FUNCTIONS """
+""" ******************* """
+
+def new_target(id_param, center, subarea_length, subarea_width):
+
+    global graph_for_UAV
+    global k_m
+    global starting_point_for_UAV
+    global target_point_for_UAV 
+    global target_coords
+    global target_point
+    global queue
+    global current_position_for_UAV
+    global pos_coords
+    
+    graph_for_UAV[id_param] = GridWorld(X_DIM, Y_DIM)  
+    k_m[id_param] = 0
+    starting_point_for_UAV[id_param] = current_position_for_UAV[id_param]
+
+    new_target_x = randint(center[0] - math.floor(subarea_length/2), center[0] + math.floor(subarea_length/2))
+    new_target_y = randint(center[1] - math.floor(subarea_width/2), center[1] + math.floor(subarea_width/2))
+    new_target = [new_target_x, new_target_y]
+    """ print("center is: ")
+    print(center)
+    print("new target is: ")
+    print(new_target) """
+    target_point_for_UAV[id_param] = coordsToStateName(new_target)
+
+    target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
+    """ print("target_ coords for UAV" + str(id_param) + ": ")
+    print(target_coords[id_param]) """
+    target_point[id_param] = ROS_to_Dstar_coordinates(target_coords[id_param][0], target_coords[id_param][1], -1)
+    print("in function target point is: ")
+    print(target_point[id_param].pose.position)
+    
+    graph_for_UAV[id_param].setStart(starting_point_for_UAV[id_param]) # set initial UAV position for UAV, to its graph
+    graph_for_UAV[id_param].setGoal(target_point_for_UAV[id_param])
+    queue[id_param] = []
+    graph_for_UAV[id_param], queue[id_param], k_m[id_param] = initDStarLite(graph_for_UAV[id_param], queue[id_param], starting_point_for_UAV[id_param], target_point_for_UAV[id_param], k_m[id_param])
+    pos_coords[id_param] = stateNameToCoords(current_position_for_UAV[id_param])
+
 
 # ROS things
 
 """ ******************* """
 """ SERVICE HANDLERS """
 """ ******************* """
+# class setting_target:
+
+#     def __init__(self, id):
+#         self.id = id
+
+#     def setting_target_handler(self, req):
+#         id = self.id
+
+#         """ if made_it[id]:
+#             response_ready = True
+#         else:
+#             response_ready = False """
+#         return new_pointResponse(True, target_point[id])
+
 class waypointing:
 
     def __init__(self, id):
@@ -100,6 +158,7 @@ class waypointing:
         if waypoint_ready[id]: 
             reached_waypoint_for_UAV[id] = False 
         return new_pointResponse(waypoint_ready[id], new_waypoint[id])
+
 
 class reached_target_check:
 
@@ -125,15 +184,18 @@ if __name__ == "__main__":
     waypoint_ready = [False]*swarmPopulation
     new_waypoint = [PoseStamped()]*swarmPopulation
 
+    sensed_overheat = False
+    
     target_checker = []
-    an_UAV_reached_target = False
     
     rospy.init_node('main_node', anonymous=False)
+    rate = rospy.Rate(1)  # 1hz
+
 
     for ID in range(swarmPopulation):
         graph_for_UAV.append(GridWorld(X_DIM, Y_DIM)) # create a graph for each drone seperately
         k_m.append(0) # initialize k+m for all UAVs to 0
-        starting_point_for_UAV.append(get_initial_position(ID)) # get initial position from each drone
+        starting_point_for_UAV.append(coordsToStateName(get_UAV_position(ID))) # get initial position from each drone
         waypointer.append(waypointing(ID)) # create separate objects for every UAV's waypoint handler
         waypoint_service = "uav" + str(ID) +  "/motion/position/global/waypoint"
         rospy.Service(waypoint_service, new_point, waypointer[ID].waypoint_handler)
@@ -142,15 +204,27 @@ if __name__ == "__main__":
         reached_target_check_service = "uav" + str(ID) +  "/motion/on_target"
         rospy.Service(reached_target_check_service, on_target, target_checker[ID].on_target_handler)
 
-    catholicTarget = rospy.get_param("/catholicTarget") # param /catholicTarget declared in simulation.launch file of motion package
-    target_point_for_UAV = []
-    target_coords = [] 
-    for ID in range(swarmPopulation):
-        target_point_for_UAV.append(rospy.get_param("/Target"+str(ID))) # param /catholicTarget+str(ID) declared in simulation.launch file of motion package 
-        if target_point_for_UAV[ID] == "catholic":
-            target_point_for_UAV[ID] = catholicTarget
+    # overheat_sensed_at = rospy.get_param("/overheat_sensed_at") # param /overheat_sensed_at declared in simulation.launch file of motion package
+    target_point_for_UAV = [] # 'x<x_coordinate>y<y_coordinate>'
+    
+    # while overheat_sensed_at == "":
+    #     overheat_sensed_at = rospy.get_param("/overheat_sensed_at") # wait until I get an overheat measurement from a sensor
+    # overheat_sensed_at = 'x5y20'
+    # send_UAVs_to_overheated_point()
+    ############
+    
+    # target_setter = [] # create separate objects for every UAV's setting_target handler
+    target_pub = []
+    target_point = [PoseStamped()]*swarmPopulation 
+    target_coords = []
+    for ID in range(swarmPopulation):    
+        target_point_for_UAV.append(starting_point_for_UAV[ID])
         target_coords.append(stateNameToCoords(target_point_for_UAV[ID])) 
-        set_target_point(target_coords[ID], ID)
+
+        target_point[ID] = ROS_to_Dstar_coordinates(target_coords[ID][0], target_coords[ID][1], -1)
+        # target_setter.append(setting_target(ID))
+        target_point_topic = "uav" + str(ID) + "/motion/position/global/target"
+        target_pub.append(rospy.Publisher(target_point_topic, PoseStamped, queue_size=10))
 
     queue = []
     current_position_for_UAV = []
@@ -163,27 +237,49 @@ if __name__ == "__main__":
         queue.append([]) # list of lists for queues of each UAV
 
         graph_for_UAV[i], queue[i], k_m[i] = initDStarLite(graph_for_UAV[i], queue[i], starting_point_for_UAV[i], target_point_for_UAV[i], k_m[i])
-
+        
         current_position_for_UAV.append(starting_point_for_UAV[i])
 
         pos_coords.append(stateNameToCoords(current_position_for_UAV[i]))
 
+    on_patrol_population, x_divider, y_divider = calculate_on_patrol_population(swarmPopulation, sensed_overheat)
+    patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
+    assigned_areas = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers)
 
     basicfont = pygame.font.SysFont('Comic Sans MS', 16)
 
     # -------- Main Program Loop -----------
     while not done:
-
         for ID in range(swarmPopulation):
             if reached_waypoint_for_UAV[ID] and not made_it[ID]:
                 s_new[ID], k_m[ID] = moveAndRescan(graph_for_UAV[ID], queue[ID], current_position_for_UAV[ID], VIEWING_RANGE, k_m[ID])                
                 # print('setting current_position_for_UAV' + str(ID) + ' to ' + s_new[ID])
-                current_position_for_UAV[ID] = s_new[ID]
+                if s_new[ID] is not 'goal':
+                    current_position_for_UAV[ID] = s_new[ID]
+                # print("current position is: " + current_position_for_UAV[ID])
                 pos_coords[ID] = stateNameToCoords(current_position_for_UAV[ID])
                 new_waypoint[ID] = ROS_to_Dstar_coordinates(pos_coords[ID][0], pos_coords[ID][1], -1)
                 waypoint_ready[ID] = True
                 while waypoint_ready[ID]:
                     waypoint_ready[ID] = reached_waypoint_for_UAV[ID] # set to false in the service handler when the coordinates are being sent
+
+            if made_it[ID]: # when an UAV reaches target, it gets a new one
+                if rospy.get_param("/mode" + str(ID)) == "patrol":
+                    print("UAV" + str(ID) + " made it to patrol subtarget")
+                    c_index = assigned_areas.index(ID) # index on patrol_centers list that corresponds to this UAv's assigned area
+                    new_target(ID, patrol_centers[c_index], subarea_length, subarea_width)
+
+                    while True:
+                        if target_pub[ID].get_num_connections() > 0:
+                            target_pub[ID].publish(target_point[ID])
+                            break
+                        else:
+                            rate.sleep()
+
+                    print("should have published UAV" + str(ID) + " target is :")
+                    print(target_point[ID].pose.position)
+                    made_it[ID] = False
+                   
 
         if not made_it[-1] and min(made_it[:-1]): # min(made_it[:-1]) returns False if at least one of the UAVs has not reached destination
             made_it[-1] = True # set last cell of made_it list to true, only when all UAVs have reached destination 
@@ -197,7 +293,8 @@ if __name__ == "__main__":
                 pos = pygame.mouse.get_pos()
                 # Change the x/y screen coordinates to grid coordinates
                 column = pos[0] // (WIDTH + MARGIN) 
-                row = pos[1] // (HEIGHT + MARGIN) 
+                row = pos[1] // (HEIGHT + MARGIN)
+                print(row, column) 
                 # Set that location to one
                 for ID in range(swarmPopulation):
                     if(graph_for_UAV[ID].cells[row][column] == 0):
@@ -236,16 +333,16 @@ if __name__ == "__main__":
                 #        screen.blit(text, textrect)
 
         # fill in goal cell with GREEN
-        if catholicTarget in target_point_for_UAV: # if there is a catholic target, draw a green square to symbolize it
-                pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * target_coords[i][0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * target_coords[i][1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2])
+        """ if overheat_sensed_at in target_point_for_UAV: # draw a green square to symbolize overheat point
+                pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * target_coords[i][0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * target_coords[i][1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2]) """
         # print('drawing robot pos_coords: ', pos_coords)
         # draw moving robot, based on pos_coords
         
         robot_center = []
         for i in range(swarmPopulation):
 
-            if target_point_for_UAV[i] is not catholicTarget: # if a UAV has different target than the catholic, draw a square with the UAV's color to symbolize it
-                pygame.draw.rect(screen, uav_colors[i], [(MARGIN + WIDTH) * target_coords[i][0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * target_coords[i][1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2])
+            """ if target_point_for_UAV[i] is not overheat_sensed_at: # if a UAV has different target than the catholic, draw a square with the UAV's color to symbolize it """
+            pygame.draw.rect(screen, uav_colors[i], [(MARGIN + WIDTH) * target_coords[i][0] + MARGIN - WIDTH / 4, (MARGIN + HEIGHT) * target_coords[i][1] + MARGIN - HEIGHT / 4, WIDTH / 2, HEIGHT / 2])
             
             robot_center.append([int(pos_coords[i][0] * (WIDTH + MARGIN)) +  MARGIN, int(pos_coords[i][1] * (HEIGHT + MARGIN)) + MARGIN]) # drone appears at the upper left corner of a square
             

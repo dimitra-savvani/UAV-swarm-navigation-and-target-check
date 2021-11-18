@@ -12,20 +12,23 @@
 using namespace std;
 
 double safeDistance;
-double flightHeight;
+double patrolHeight;
 
 mavros_msgs::State current_state;
 geometry_msgs::PoseStamped position_local;
 mavros_msgs::SetMode offb_set_mode;
 mavros_msgs::CommandBool arm_cmd;
-motion::new_point target_global_msg;
 geometry_msgs::PoseStamped take_off_point_local;
 geometry_msgs::PoseStamped take_off_point_global;
 geometry_msgs::PoseStamped waypoint_local;
 geometry_msgs::PoseStamped target_global;
-geometry_msgs::PoseStamped target_local;
+geometry_msgs::PoseStamped patrol_target_global;
+geometry_msgs::PoseStamped patrol_target_local;
+geometry_msgs::PoseStamped detected_target_local;
 motion::new_point waypoint_global_msg;
 motion::on_target on_target_msg;
+
+string mode = "patrol";
 
 bool reached_waypoint = false;
 bool recieved_new_target = false;
@@ -39,6 +42,10 @@ void position_local_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // curr
     position_local = *msg;
 }
 
+void target_point_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // current global target(either for patrol or for detected overheat)
+    target_global = *msg;
+}
+
 /* ******************* */
 /* FUCTIONS */
 /* ******************* */
@@ -47,19 +54,21 @@ void position_local_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // curr
 geometry_msgs::PoseStamped local_to_global_coords(string ID, geometry_msgs::PoseStamped pos, int direction){
     // direction controlls whether the coordinates are converted from local to global or from global to local, should either be 1 or -1.
     
-    pos.pose.position.x -= 34*direction;
-
     if (ID == "0"){
-        pos.pose.position.y += 21*direction;
+        pos.pose.position.x -= 17*direction;
+        pos.pose.position.y += 14*direction;
     }
     else if (ID == "1"){
-       pos.pose.position.y += 7*direction;
+       pos.pose.position.x += 17*direction;
+       pos.pose.position.y += 14*direction;
     }
     else if (ID == "2"){
-        pos.pose.position.y -= 7*direction;
+        pos.pose.position.x -= 17*direction;
+        pos.pose.position.y -= 14*direction;
     }
     else if (ID == "3"){
-        pos.pose.position.y -= 21*direction;
+        pos.pose.position.x += 17*direction;
+        pos.pose.position.y -= 14*direction;
     }
 
     return pos;
@@ -76,11 +85,23 @@ bool has_reached_waypoint(geometry_msgs::Point waypoint_local_, geometry_msgs::P
     return false;
 }
 
-bool too_close_to_target(string ID, geometry_msgs::Point waypoint_local_, geometry_msgs::Point target_local_){
+bool on_patrol_target(string ID, geometry_msgs::Point position_local_, geometry_msgs::Point patrol_target_local_){
     
-    if(abs(waypoint_local_.x - target_local_.x)<safeDistance){
-        if(abs(waypoint_local_.y - target_local_.y)<safeDistance){
-            if(abs(waypoint_local_.z - target_local_.z)<safeDistance){ //if drone is close enough to the target
+    if(abs(position_local_.x - patrol_target_local_.x) < 0.1){
+        if(abs(position_local_.y - patrol_target_local_.y) < 0.1){
+            if(abs(position_local_.z - patrol_target_local_.z) < 0.1){ //if drone has reached patrol target
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool detected_target(string ID, geometry_msgs::Point position_local_, geometry_msgs::Point detected_target_local_){
+    
+    if(abs(position_local_.x - detected_target_local_.x)<safeDistance){
+        if(abs(position_local_.y - detected_target_local_.y)<safeDistance){
+            if(abs(position_local_.z - detected_target_local_.z)<safeDistance){ //if drone is close enough to the target
                 return true;
             }
         }
@@ -100,7 +121,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, uav);
     ros::NodeHandle nh;
 
-    if (ros::param::get("/flightHeight", flightHeight)){} // param /flightHeight declared in simulation.launch file of motion package
+    if (ros::param::get("/patrolHeight", patrolHeight)){} // param /patrolHeight declared in simulation.launch file of motion package
     
     if (ros::param::get("/safeDistance", safeDistance)){} // param /safeDistance declared in simulation.launch file of motion package
     
@@ -114,18 +135,21 @@ int main(int argc, char **argv)
     ros::Subscriber position_local_sub = nh.subscribe<geometry_msgs::PoseStamped> 
     (uav + "/mavros/local_position/pose", 10, position_local_cb);
 
+    ros::Subscriber target_point_sub = nh.subscribe<geometry_msgs::PoseStamped> 
+    (uav + "/motion/position/global/target", 10, target_point_cb);
+
     /* Publishers */
 
     ros::Publisher waypoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/mavros/setpoint_position/local", 10);
 
-    ros::Publisher take_off_global_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher global_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
     (uav + "/motion/position/global", 1);
 
     /* Service Clients */
 
-    ros::ServiceClient target_point_client = nh.serviceClient<motion::new_point>
-    (uav + "/motion/position/global/target");
+    /* ros::ServiceClient target_point_client = nh.serviceClient<motion::new_point>
+    (uav + "/motion/position/global/target"); */
 
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
     (uav + "/mavros/cmd/arming"); //client to request arming
@@ -154,30 +178,23 @@ int main(int argc, char **argv)
     }
 
     take_off_point_local = position_local; //initial position, when drones have not taken off yet
-    take_off_point_local.pose.position.z = flightHeight; // set take off desired poisition 
+    take_off_point_local.pose.position.z = patrolHeight; // set take off desired poisition 
     take_off_point_global = local_to_global_coords(ID, take_off_point_local, 1);
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
         waypoint_local_pub.publish(take_off_point_local); // for mavros
-        take_off_global_pub.publish(take_off_point_global); // for Dstar
+        global_pos_pub.publish(take_off_point_global); // for Dstar
         ros::spinOnce();
         rate.sleep();
     }
-
-    target_global_msg.request.ready = true;
-    target_global_msg.response.ready = false;
-    while(ros::ok() && !target_global_msg.response.ready){
-        if (target_point_client.call(target_global_msg)){
-            target_global = target_global_msg.response.new_point;
-            ROS_INFO_STREAM("first target " << target_global.pose.position);
-        }
-    }
-
-    target_local = local_to_global_coords(ID, target_global, -1);
-    waypoint_local = take_off_point_local;
-
+    waypoint_local = take_off_point_local; // consider take_off_point to be the first waypoint
+    
+    target_global = take_off_point_global;
+    patrol_target_global = take_off_point_global;
+    patrol_target_local = local_to_global_coords(ID, patrol_target_global, -1);
+    
     offb_set_mode.request.custom_mode = "OFFBOARD"; //We set the custom mode to OFFBOARD
 
     /* The rest of the code is pretty self explanatory. We attempt to switch to Offboard mode, after which we arm the quad 
@@ -202,39 +219,89 @@ int main(int argc, char **argv)
             }
         }
 
-        
-        if (!reached_waypoint){
-            reached_waypoint = has_reached_waypoint(waypoint_local.pose.position, position_local.pose.position);
-        }
-        else{
-            waypoint_global_msg.request.ready = true;
-            waypoint_global_msg.response.ready = false;
-            ROS_INFO_STREAM("reached waypoint! Wainting for new waypoint...");
-            while(!waypoint_global_msg.response.ready){ // brakes when response is ready
-                if(waypoint_client.call(waypoint_global_msg)){
-                }
-                waypoint_local_pub.publish(waypoint_local); // keep streaming previous setpoint until you get the new one
-            }
-            waypoint_local = local_to_global_coords(ID, waypoint_global_msg.response.new_point, -1);
-            reached_waypoint = false;
-            ROS_INFO_STREAM("trying to reach waypoint...\n");
-        }
+        if (ros::param::get("/mode" + ID, mode)){} // param /mode + ID declared in simulation.launch file of motion package        
 
-        if(too_close_to_target(ID, waypoint_local.pose.position, target_local.pose.position)){ // keep publishing target position until an new one is set
-            
-            on_target_msg.request.arrival = true;
-            on_target_msg.response.arrival_granted = false;
-            while(!on_target_msg.response.arrival_granted){
-                if(on_target_client.call(on_target_msg)){
-                    ROS_INFO_STREAM("UAV" << ID << " reached target");
+        if(mode == "patrol"){
+            if (!reached_waypoint){
+                reached_waypoint = has_reached_waypoint(waypoint_local.pose.position, position_local.pose.position);
+            }
+            else{
+                waypoint_global_msg.request.ready = true;
+                waypoint_global_msg.response.ready = false;
+                ROS_INFO_STREAM("reached waypoint!" << waypoint_global_msg.response.new_point.pose.position << "Wainting for new waypoint...");
+                while(!waypoint_global_msg.response.ready){ // brakes when response is ready
+                    if(waypoint_client.call(waypoint_global_msg)){
+                    }
+                    waypoint_local_pub.publish(waypoint_local); // keep streaming previous waypoint setpoint until you get the new one
+                    global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                 }
+                waypoint_local = local_to_global_coords(ID, waypoint_global_msg.response.new_point, -1);
+                reached_waypoint = false;
+                ROS_INFO_STREAM("UAV" << ID << " trying to reach patrol waypoint...\n");
             }
 
-            while(!recieved_new_target){
-                waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint to stay safely close to the target, ecxept if UAV gets a new target
+            if(on_patrol_target(ID, position_local.pose.position, patrol_target_local.pose.position)){ 
+                
+                on_target_msg.request.arrival = true;
+                on_target_msg.response.arrival_granted = false;
+                while(!on_target_msg.response.arrival_granted){
+                    if(on_target_client.call(on_target_msg)){ // notify main.py that this UAV reached patrol subtarget
+                        ROS_INFO_STREAM("UAV" << ID << " reached patrol target");
+                    }
+                }
+                
+                while (target_global.pose.position == patrol_target_global.pose.position){
+                    waypoint_local_pub.publish(waypoint_local); // keep streaming patrol subtarget setpoint until UAV gets a new patrol subtarget
+                    global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
+                    ros::spinOnce();
+                    rate.sleep();
+                } 
+
+                patrol_target_global =  target_global; // new subtarget is set
+                patrol_target_local = local_to_global_coords(ID, patrol_target_global, -1);              
+            }else{
+                waypoint_local_pub.publish(waypoint_local); // keep streaming waypoint setpoint until UAV reaches it
+                global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
             }
-        }else{
-            waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint until UAV reaches it
+        }
+
+        if(mode == "detect"){
+            if (!reached_waypoint){
+                reached_waypoint = has_reached_waypoint(waypoint_local.pose.position, position_local.pose.position);
+            }
+            else{
+                waypoint_global_msg.request.ready = true;
+                waypoint_global_msg.response.ready = false;
+                ROS_INFO_STREAM("reached waypoint! Wainting for new waypoint...");
+                while(!waypoint_global_msg.response.ready){ // brakes when response is ready
+                    if(waypoint_client.call(waypoint_global_msg)){
+                    }
+                    waypoint_local_pub.publish(waypoint_local); // keep streaming previous setpoint until you get the new one
+                    global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
+                }
+                waypoint_local = local_to_global_coords(ID, waypoint_global_msg.response.new_point, -1);
+                reached_waypoint = false;
+                ROS_INFO_STREAM("trying to reach waypoint...\n");
+            }
+
+            if(detected_target(ID, position_local.pose.position, detected_target_local.pose.position)){ // keep publishing target position until an new one is set
+                
+                on_target_msg.request.arrival = true;
+                on_target_msg.response.arrival_granted = false;
+                while(!on_target_msg.response.arrival_granted){
+                    if(on_target_client.call(on_target_msg)){
+                        ROS_INFO_STREAM("UAV" << ID << " reached target");
+                    }
+                }
+
+                while(!recieved_new_target){
+                    waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint to stay safely close to the target, ecxept if UAV gets a new target
+                    global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
+                }
+            }else{
+                waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint until UAV reaches it
+                global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
+            }
         }
 
         ros::spinOnce();
