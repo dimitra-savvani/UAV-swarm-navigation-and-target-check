@@ -24,13 +24,15 @@ geometry_msgs::PoseStamped waypoint_local;
 geometry_msgs::PoseStamped target_global;
 geometry_msgs::PoseStamped patrol_target_global;
 geometry_msgs::PoseStamped patrol_target_local;
-geometry_msgs::PoseStamped detected_target_local;
+geometry_msgs::PoseStamped overheat_target_local;
+geometry_msgs::PoseStamped overheat_target_global;
 motion::new_point waypoint_global_msg;
 motion::on_target on_target_msg;
 
 string mode = "patrol";
 
 bool reached_waypoint = false;
+bool got_overheat_target = false;
 bool recieved_new_target = false;
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg){ // current state of the autopilot 
@@ -97,11 +99,11 @@ bool on_patrol_target(string ID, geometry_msgs::Point position_local_, geometry_
     return false;
 }
 
-bool detected_target(string ID, geometry_msgs::Point position_local_, geometry_msgs::Point detected_target_local_){
+bool detected_target(string ID, geometry_msgs::Point position_local_, geometry_msgs::Point overheat_target_local_){
     
-    if(abs(position_local_.x - detected_target_local_.x)<safeDistance){
-        if(abs(position_local_.y - detected_target_local_.y)<safeDistance){
-            if(abs(position_local_.z - detected_target_local_.z)<safeDistance){ //if drone is close enough to the target
+    if(abs(position_local_.x - overheat_target_local_.x)<safeDistance){
+        if(abs(position_local_.y - overheat_target_local_.y)<safeDistance){
+            if(abs(position_local_.z - overheat_target_local_.z)<safeDistance){ //if drone is close enough to the target
                 return true;
             }
         }
@@ -266,6 +268,17 @@ int main(int argc, char **argv)
         }
 
         if(mode == "detect"){
+            // ROS_INFO_STREAM("UAV" << ID << "on detect mode");
+            if (!got_overheat_target){
+                ros::spinOnce();
+                rate.sleep();
+                overheat_target_global =  target_global; // new subtarget is set
+                overheat_target_local = local_to_global_coords(ID, overheat_target_global, -1);
+                ROS_INFO_STREAM("overheat target is:\n " << overheat_target_global.pose.position);
+                got_overheat_target = true;
+            }
+            
+
             if (!reached_waypoint){
                 reached_waypoint = has_reached_waypoint(waypoint_local.pose.position, position_local.pose.position);
             }
@@ -276,7 +289,7 @@ int main(int argc, char **argv)
                 while(!waypoint_global_msg.response.ready){ // brakes when response is ready
                     if(waypoint_client.call(waypoint_global_msg)){
                     }
-                    waypoint_local_pub.publish(waypoint_local); // keep streaming previous setpoint until you get the new one
+                    waypoint_local_pub.publish(waypoint_local); // keep streaming previous waypoint setpoint until you get the new one
                     global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                 }
                 waypoint_local = local_to_global_coords(ID, waypoint_global_msg.response.new_point, -1);
@@ -284,13 +297,13 @@ int main(int argc, char **argv)
                 ROS_INFO_STREAM("trying to reach waypoint...\n");
             }
 
-            if(detected_target(ID, position_local.pose.position, detected_target_local.pose.position)){ // keep publishing target position until an new one is set
+            if(detected_target(ID, position_local.pose.position, overheat_target_local.pose.position)){ // keep publishing target position until an new one is set
                 
                 on_target_msg.request.arrival = true;
                 on_target_msg.response.arrival_granted = false;
                 while(!on_target_msg.response.arrival_granted){
-                    if(on_target_client.call(on_target_msg)){
-                        ROS_INFO_STREAM("UAV" << ID << " reached target");
+                    if(on_target_client.call(on_target_msg)){ // notify main.py that this UAV reached overheated point
+                        ROS_INFO_STREAM("UAV" << ID << " reached overheated area");
                     }
                 }
 
