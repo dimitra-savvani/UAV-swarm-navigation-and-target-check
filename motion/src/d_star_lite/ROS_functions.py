@@ -31,9 +31,6 @@ def get_UAV_position(ID):
 
     return current_coordinate
 
-def set_UAV_target(ID, target_point):
-    set_UAV_target_topic = "uav" + str(ID) + "/motion/position/global/target"
-    pub = rospy.Publisher(set_UAV_target_topic, PoseStamped, queue_size=1)
 
 def calculate_on_patrol_population(swarmPopulation, sensed_overheat):
 
@@ -44,7 +41,7 @@ def calculate_on_patrol_population(swarmPopulation, sensed_overheat):
     previous_pair["y"] = 1 
 
     if sensed_overheat:
-        attempted_on_patrol_population = math.floor(swarmPopulation / 2)
+        attempted_on_patrol_population = int(math.floor(swarmPopulation / 2))
     else:
         attempted_on_patrol_population = swarmPopulation
 
@@ -107,8 +104,8 @@ def assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_c
                 if min_dist > distance(get_UAV_position(ID), patrol_centers[c_iterator]):
                     min_dist = distance(get_UAV_position(ID), patrol_centers[c_iterator])
                     assigned_areas[c_iterator] = ID
-    print("assigned_areas are: ")
-    print(assigned_areas)                
+    # print("assigned_areas are: ")
+    # print(assigned_areas)                
     return assigned_areas
 
 def send_UAVs_to_overheated_point(ID):
