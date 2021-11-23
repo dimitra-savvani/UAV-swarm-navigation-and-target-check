@@ -126,19 +126,6 @@ def target_overheated_point(id_param, overheat_sensed_at):
 """ ******************* """
 """ SERVICE HANDLERS """
 """ ******************* """
-# class setting_target:
-
-#     def __init__(self, id):
-#         self.id = id
-
-#     def setting_target_handler(self, req):
-#         id = self.id
-
-#         """ if made_it[id]:
-#             response_ready = True
-#         else:
-#             response_ready = False """
-#         return new_pointResponse(True, target_point[id])
 
 class waypointing:
 

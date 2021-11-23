@@ -108,11 +108,6 @@ def assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_c
     # print(assigned_areas)                
     return assigned_areas
 
-def send_UAVs_to_overheated_point(ID):
-    position_topic = "uav" + str(ID) + "/mavros/local_position/pose"
-    # uav + "/mavros/local_position/pose"
-    
-
 
 def locate_obstacles():
 

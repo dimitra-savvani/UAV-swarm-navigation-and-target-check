@@ -14,6 +14,9 @@ using namespace std;
 double safeDistance;
 double patrolHeight;
 
+double dx;
+double dy;
+
 mavros_msgs::State current_state;
 geometry_msgs::PoseStamped position_local;
 mavros_msgs::SetMode offb_set_mode;
@@ -307,9 +310,15 @@ int main(int argc, char **argv)
                     }
                 }
 
+                dx = waypoint_local.pose.position.x - overheat_target_local.pose.position.x;
+                dy = waypoint_local.pose.position.y - overheat_target_local.pose.position.y;
+
+                waypoint_local.pose.orientation.z = atan2(dx, dy);
                 while(!recieved_new_target){
-                    waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint to stay safely close to the target, ecxept if UAV gets a new target
-                    global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
+
+                    waypoint_local_pub.publish(waypoint_local);
+
+                    rate.sleep();
                 }
             }else{
                 waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint until UAV reaches it
