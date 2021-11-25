@@ -13,6 +13,7 @@ using namespace std;
 
 double safeDistance;
 double patrolHeight;
+double overheatHeight;
 
 double dx;
 double dy;
@@ -127,6 +128,8 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
 
     if (ros::param::get("/patrolHeight", patrolHeight)){} // param /patrolHeight declared in simulation.launch file of motion package
+    
+    if (ros::param::get("/overheatHeight", overheatHeight)){} // param /patrolHeight declared in simulation.launch file of motion package
     
     if (ros::param::get("/safeDistance", safeDistance)){} // param /safeDistance declared in simulation.launch file of motion package
     
@@ -272,13 +275,17 @@ int main(int argc, char **argv)
 
         if(mode == "detect"){
             // ROS_INFO_STREAM("UAV" << ID << "on detect mode");
-            if (!got_overheat_target){
-                ros::spinOnce();
-                rate.sleep();
-                overheat_target_global =  target_global; // new subtarget is set
-                overheat_target_local = local_to_global_coords(ID, overheat_target_global, -1);
-                ROS_INFO_STREAM("overheat target is:\n " << overheat_target_global.pose.position);
-                got_overheat_target = true;
+            while (!got_overheat_target){
+                if (overheatHeight != target_global.pose.position.z){
+                    ros::spinOnce();
+                    rate.sleep();
+                }
+                else{
+                    overheat_target_global =  target_global; // new subtarget is set
+                    overheat_target_local = local_to_global_coords(ID, overheat_target_global, -1);
+                    ROS_INFO_STREAM("overheat target is:\n " << overheat_target_global.pose.position);
+                    got_overheat_target = true;
+                }
             }
             
 

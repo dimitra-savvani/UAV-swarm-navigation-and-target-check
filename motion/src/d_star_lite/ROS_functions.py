@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import math
 
-from utils import  ROS_to_Dstar_coordinates
+from utils import  ROS_to_Dstar_coordinates, stateNameToCoords
 
 import rospy
 from geometry_msgs.msg import PoseStamped
@@ -25,7 +25,7 @@ def get_UAV_position(ID):
         int(round(raw_ROS_current_point.pose.position.z))
     ]
     
-    (current_coordinate[0], current_coordinate[1]) = ROS_to_Dstar_coordinates(current_coordinate[0], current_coordinate[1], 1)
+    (current_coordinate[0], current_coordinate[1]) = ROS_to_Dstar_coordinates(current_coordinate[0], current_coordinate[1])
 
     # print("got_current_point_from_initiator of UAV" + str(ID))
 
@@ -93,19 +93,40 @@ def distance(p1, p2): # calculate distance in 3 dimensions
     return dist
 
 
-def assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers):
+def assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at):
 
     assigned_areas = [-1]*on_patrol_population
+
+    on_detect_population = swarmPopulation-on_patrol_population
+    on_detect_UAVS = [-1]*on_detect_population
+
+    if sensed_overheat: # set UAVs that are closer to the overheat on detect mode(mode is actually set in the main program)
+
+        overheat_pos = stateNameToCoords(overheat_sensed_at)
+        overheatHeight = rospy.get_param("/overheatHeight")
+        overheat_pos.append(overheatHeight)
+
+        for d_iterator in range(on_detect_population):
+            min_dist = 100
+            for ID in range(swarmPopulation):
+                if ID not in on_detect_UAVS:
+                    if min_dist > distance(get_UAV_position(ID), overheat_pos):
+                        min_dist = distance(get_UAV_position(ID), overheat_pos)
+                        on_detect_UAVS[d_iterator] = ID
 
     for c_iterator in range(on_patrol_population):
         min_dist = 100 # if world gets much bigger this min_dist has to change to a bigger number
         for ID in range(swarmPopulation):
-            if rospy.get_param("/mode" + str(ID)) == "patrol" and ID not in assigned_areas:              
-                if min_dist > distance(get_UAV_position(ID), patrol_centers[c_iterator]):
+            if ID not in on_detect_UAVS and ID not in assigned_areas: # assign areas to patrol, for the UAVs that are not on detect mode           
+                if min_dist > distance(get_UAV_position(ID), patrol_centers[c_iterator]): # select which drone patrols each area, based on which one is closer to the center of that area
                     min_dist = distance(get_UAV_position(ID), patrol_centers[c_iterator])
                     assigned_areas[c_iterator] = ID
-    # print("assigned_areas are: ")
-    # print(assigned_areas)                
+    print("assigned_areas IDs are: ")
+    print(assigned_areas)
+
+    """ print("on_detect_UAVS are: ")
+    print(on_detect_UAVS) """
+
     return assigned_areas
 
 
@@ -118,6 +139,6 @@ def locate_obstacles():
     obs['telephone_pole'] = Point()
     obs['telephone_pole'].x, obs['telephone_pole'].y = 3, 4
 
-    (obs['telephone_pole'].x, obs['telephone_pole'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole'].x, obs['telephone_pole'].y, 1)    
+    (obs['telephone_pole'].x, obs['telephone_pole'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole'].x, obs['telephone_pole'].y)    
 
     return obs 

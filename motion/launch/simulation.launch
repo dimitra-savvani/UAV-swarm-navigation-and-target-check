@@ -12,7 +12,10 @@
         <!-- 6) local_to_global_coords() function, in collision_avoidance.cpp of motion package, an maybe num_of_positions_kept variabel as well -->
 
         <!-- declare flight height for swarm to fly -->
-        <param name="patrolHeight" type="double" value="8" />
+        <param name="patrolHeight" type="double" value="9" />
+
+        <!-- declare flight height for swarm to fly -->
+        <param name="overheatHeight" type="double" value="5" />
 
         <!-- declare safe distnce from obstacles -->
         <param name="safeDistance" type="double" value="1.5" />

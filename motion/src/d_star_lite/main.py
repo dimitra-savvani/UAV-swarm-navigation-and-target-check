@@ -8,7 +8,7 @@ from random import randint
 
 from graph import Node, Graph
 from grid import GridWorld
-from utils import stateNameToCoords, coordsToStateName
+from utils import stateNameToCoords, coordsToStateName, Dstar_to_ROS_coordinates
 from d_star_lite import initDStarLite, moveAndRescan
 from ROS_functions import *
 from motion.srv import on_target, on_targetResponse
@@ -97,7 +97,7 @@ def new_patrol_subtarget(id_param, center):
     new_target = [new_target_x, new_target_y]
     target_point_for_UAV[id_param] = coordsToStateName(new_target)
     target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
-    target_point[id_param] = ROS_to_Dstar_coordinates(target_coords[id_param][0], target_coords[id_param][1], -1)
+    target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
     
     graph_for_UAV[id_param].setStart(starting_point_for_UAV[id_param]) # set initial UAV position for UAV, to its graph
     graph_for_UAV[id_param].setGoal(target_point_for_UAV[id_param])
@@ -113,7 +113,7 @@ def target_overheated_point(id_param, overheat_sensed_at):
 
     target_point_for_UAV[id_param] = overheat_sensed_at
     target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
-    target_point[id_param] = ROS_to_Dstar_coordinates(target_coords[id_param][0], target_coords[id_param][1], -1)
+    target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
 
     graph_for_UAV[id_param].setStart(starting_point_for_UAV[id_param]) # set initial UAV position for UAV, to its graph
     graph_for_UAV[id_param].setGoal(target_point_for_UAV[id_param])
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         target_point_for_UAV.append(starting_point_for_UAV[ID])
         target_coords.append(stateNameToCoords(target_point_for_UAV[ID])) 
 
-        target_point[ID] = ROS_to_Dstar_coordinates(target_coords[ID][0], target_coords[ID][1], -1)
+        target_point[ID] = Dstar_to_ROS_coordinates(target_coords[ID][0], target_coords[ID][1], ID)
         # target_setter.append(setting_target(ID))
         target_point_topic = "uav" + str(ID) + "/motion/position/global/target"
         target_pub.append(rospy.Publisher(target_point_topic, PoseStamped, queue_size=10))
@@ -206,6 +206,7 @@ if __name__ == "__main__":
     queue = []
     current_position_for_UAV = []
     pos_coords = []
+    two_last_waypoints = []
     for i in range(swarmPopulation):
         graph_for_UAV[i].setStart(starting_point_for_UAV[i]) # set initial UAV position for each drone, to its graph
   
@@ -219,10 +220,12 @@ if __name__ == "__main__":
 
         pos_coords.append(stateNameToCoords(current_position_for_UAV[i]))
 
+        two_last_waypoints.append([pos_coords[i], pos_coords[i]])
+
     # assing patrol areas to swarm drones
     on_patrol_population, x_divider, y_divider = calculate_on_patrol_population(swarmPopulation, sensed_overheat)
     patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
-    assigned_areas = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers)
+    assigned_areas = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, "no detected overheat yet")
 
     basicfont = pygame.font.SysFont('Comic Sans MS', 16)
 
@@ -237,9 +240,10 @@ if __name__ == "__main__":
             del(patrol_centers)
             patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
             del(assigned_areas)
-            assigned_areas = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers)
+            assigned_areas = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at )
             for ID in range(swarmPopulation):
                 if ID not in assigned_areas:
+                    rospy.set_param("mode" + str(ID), "detect") # set UAV's mode to detect
                     target_overheated_point(ID, overheat_sensed_at) # set overheated point as a terget for UAVs on detect mode
                     
                     while True:
@@ -249,7 +253,7 @@ if __name__ == "__main__":
                         else:
                             rate.sleep()
 
-                    rospy.set_param("mode" + str(ID), "detect") # set UAV's mode to detect
+                    
 
         for ID in range(swarmPopulation):
             if reached_waypoint_for_UAV[ID] and not made_it[ID]:
@@ -259,7 +263,15 @@ if __name__ == "__main__":
                     current_position_for_UAV[ID] = s_new[ID]
                 # print("current position is: " + current_position_for_UAV[ID])
                 pos_coords[ID] = stateNameToCoords(current_position_for_UAV[ID])
-                new_waypoint[ID] = ROS_to_Dstar_coordinates(pos_coords[ID][0], pos_coords[ID][1], -1)
+                
+                two_last_waypoints[ID] = [pos_coords[ID], two_last_waypoints[ID][0]]
+                print(two_last_waypoints)
+                for id in range(swarmPopulation): # consider UAV's current location as obstacle for the rest of the UAVs
+                    if id != ID:
+                        graph_for_UAV[id].cells[two_last_waypoints[ID][0][1]][two_last_waypoints[ID][0][0]] = -1
+                        graph_for_UAV[id].cells[two_last_waypoints[ID][1][1]][two_last_waypoints[ID][1][0]] = 0
+
+                new_waypoint[ID] = Dstar_to_ROS_coordinates(pos_coords[ID][0], pos_coords[ID][1], ID)
                 waypoint_ready[ID] = True
                 while waypoint_ready[ID]:
                     waypoint_ready[ID] = reached_waypoint_for_UAV[ID] # set to false in the service handler when the coordinates are being sent
@@ -311,14 +323,17 @@ if __name__ == "__main__":
                 # create the grid
                 pygame.draw.rect(screen, colors[0], [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
                 node_name = 'x' + str(column) + 'y' + str(row)
-                if graph_for_UAV[0].cells[row][column] == -1: # if there is an obstacle (we could use any graph e.g graph_for_UAV[1], and it would be the same)
-                    pygame.draw.rect(screen, colors[graph_for_UAV[0].cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
-                    node_name = 'x' + str(column) + 'y' + str(row) 
-                    # print('unseen obstacle for uav: ', i, 'at',  node_name, 'with value', graph_for_UAV[i].cells[row][column])
-                for i in range(swarmPopulation):
-                    if graph_for_UAV[i].cells[row][column] == -2 : # obstacles that uav[i] has seen
-                        pygame.draw.rect(screen, colors[graph_for_UAV[i].cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                for ID in range(swarmPopulation):
+                    if graph_for_UAV[ID].cells[row][column] == -1: # if there is an obstacle for any UAV (every UAV is considered as an obstacle to the others)
+                        pygame.draw.rect(screen, colors[graph_for_UAV[ID].cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
                         node_name = 'x' + str(column) + 'y' + str(row) 
+                        # print('unseen obstacle for uav: ', i, 'at',  node_name, 'with value', graph_for_UAV[i].cells[row][column])
+                        break
+                for ID in range(swarmPopulation):
+                    if graph_for_UAV[ID].cells[row][column] == -2 : # obstacles that uav[i] has seen
+                        pygame.draw.rect(screen, colors[graph_for_UAV[ID].cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                        node_name = 'x' + str(column) + 'y' + str(row) 
+                        break
                         # print('obstacle for uav: ', i, 'at',  node_name, 'with value', graph_for_UAV[i].cells[row][column])
                     
                 #    if(graph_for_UAV[1].graph[node_name].g != float('inf')):

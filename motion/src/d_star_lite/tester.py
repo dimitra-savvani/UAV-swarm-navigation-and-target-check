@@ -1,21 +1,16 @@
-""" from random import randint
-import math
+""" pos_coords = []
+two_last_waypoints = []
 
+for i in range(4):
+    pos_coords.append([i,i+2])
+    two_last_waypoints.append([pos_coords[i], pos_coords[i]])
 
-center = [10.0, 20]
-subarea_length = 20
-subarea_width = 40.3
+print(two_last_waypoints[2][0])
 
-new_target_x = randint(center[0] - math.floor(subarea_length/2), center[0] + math.floor(subarea_length/2))
-new_target_y = randint(center[1] - math.floor(subarea_width/2), center[1] + math.floor(subarea_width/2))
+for ID in range(4):
+    pos_coords[ID] = [ID,ID+1]
+    two_last_waypoints[ID] = [pos_coords[ID], two_last_waypoints[ID][0]] ####
 
-new_target = [new_target_x, new_target_y]
-print(new_target) """
+print(two_last_waypoints) """
 
-""" def stateNameToCoords(name):
-    return [int(name.split('x')[1].split('y')[0]), int(name.split('x')[1].split('y')[1])]
-print(stateNameToCoords("x20y31")) """
-
-while True:
-    print("once")
-    break
+a = [[1,2],3]
