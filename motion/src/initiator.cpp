@@ -11,6 +11,15 @@
 
 using namespace std;
 
+int swarmPopulation;
+
+#define PI 3.14159265
+int deg;
+double rad;
+bool entered_detection_circle = false;
+double detection_circle_x;
+double detection_circle_y;
+
 double safeDistance;
 double patrolHeight;
 double overheatHeight;
@@ -115,6 +124,12 @@ bool detected_target(string ID, geometry_msgs::Point position_local_, geometry_m
     return false;
 }
 
+// Function to calculate distance
+float distance(int x1, int y1, int x2, int y2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
+
 /* ******************* */
 /* NODE */
 /* ******************* */
@@ -126,6 +141,8 @@ int main(int argc, char **argv)
     string uav = "uav" + ID;
     ros::init(argc, argv, uav);
     ros::NodeHandle nh;
+
+    if (ros::param::get("/swarmPopulation", swarmPopulation)){} // param /swarmPopulation declared in simulation.launch file of motion package
 
     if (ros::param::get("/patrolHeight", patrolHeight)){} // param /patrolHeight declared in simulation.launch file of motion package
     
@@ -156,9 +173,6 @@ int main(int argc, char **argv)
 
     /* Service Clients */
 
-    /* ros::ServiceClient target_point_client = nh.serviceClient<motion::new_point>
-    (uav + "/motion/position/global/target"); */
-
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
     (uav + "/mavros/cmd/arming"); //client to request arming
 
@@ -177,6 +191,7 @@ int main(int argc, char **argv)
     to enter Offboard mode from Position mode, this way if the vehicle drops out of Offboard mode it will stop in 
     its tracks and hover. */
     ros::Rate rate(20.0); //the setpoint publishing rate MUST be faster than 2Hz
+    ros::Rate circle_rate(3.0); // rate to publish setpoints for circling overheated point
 
     /* Before publishing anything, we wait for the connection to be established between MAVROS and the autopilot. This 
     loop should exit as soon as a heartbeat message is received. */
@@ -187,6 +202,8 @@ int main(int argc, char **argv)
 
     take_off_point_local = position_local; //initial position, when drones have not taken off yet
     take_off_point_local.pose.position.z = patrolHeight; // set take off desired poisition 
+    take_off_point_local.pose.orientation.w = 0;
+    take_off_point_local.pose.orientation.x = 1;
     take_off_point_global = local_to_global_coords(ID, take_off_point_local, 1);
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
@@ -317,15 +334,35 @@ int main(int argc, char **argv)
                     }
                 }
 
-                dx = waypoint_local.pose.position.x - overheat_target_local.pose.position.x;
-                dy = waypoint_local.pose.position.y - overheat_target_local.pose.position.y;
-
-                waypoint_local.pose.orientation.z = atan2(dx, dy);
                 while(!recieved_new_target){
+                    for(deg = 0; deg <360; deg = deg + 10){
 
-                    waypoint_local_pub.publish(waypoint_local);
+                        rad = deg * PI / 180.0;
 
-                    rate.sleep();
+                        detection_circle_x = overheat_target_local.pose.position.x + cos(rad)*safeDistance;
+                        detection_circle_y = overheat_target_local.pose.position.y + sin(rad)*safeDistance;
+                        
+                        if (!entered_detection_circle){
+                            waypoint_local_pub.publish(waypoint_local); //keep streaming current waypoint
+                            rate.sleep();
+                            if (distance(waypoint_local.pose.position.x, waypoint_local.pose.position.y, detection_circle_x, detection_circle_y) < 2){
+                                
+                                // for 
+                                
+                                entered_detection_circle = true;
+                            }
+                        }else{
+                            waypoint_local.pose.position.x = detection_circle_x;
+                            waypoint_local.pose.position.y = detection_circle_y;
+
+                            /* dx = waypoint_local.pose.position.x - overheat_target_local.pose.position.x;
+                            dy = waypoint_local.pose.position.y - overheat_target_local.pose.position.y;
+                            waypoint_local.pose.orientation.z = atan2(dx, dy); */
+
+                            waypoint_local_pub.publish(waypoint_local);
+                            circle_rate.sleep();
+                        }
+                    }
                 }
             }else{
                 waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint until UAV reaches it

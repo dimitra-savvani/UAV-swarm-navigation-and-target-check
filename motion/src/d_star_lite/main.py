@@ -265,7 +265,6 @@ if __name__ == "__main__":
                 pos_coords[ID] = stateNameToCoords(current_position_for_UAV[ID])
                 
                 two_last_waypoints[ID] = [pos_coords[ID], two_last_waypoints[ID][0]]
-                print(two_last_waypoints)
                 for id in range(swarmPopulation): # consider UAV's current location as obstacle for the rest of the UAVs
                     if id != ID:
                         graph_for_UAV[id].cells[two_last_waypoints[ID][0][1]][two_last_waypoints[ID][0][0]] = -1
