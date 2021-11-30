@@ -43,6 +43,7 @@ And replace the placeholder Service*.srv files for our service file:
 add_service_files(
   FILES
   next_step.srv
+  on_target.srv
 )
 ```
 3. Also replace
