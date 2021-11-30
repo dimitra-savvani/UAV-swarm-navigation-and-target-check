@@ -216,8 +216,6 @@ add_executable(initiator src/initiator.cpp)
 target_link_libraries(initiator ${catkin_LIBRARIES})
 #add_dependencies(initiator  motion_generate_messages_cpp)
 
-add_executable(collision_avoidance src/collision_avoidance.cpp)
-target_link_libraries(collision_avoidance ${catkin_LIBRARIES})
-#add_dependencies(collision_avoidance  motion_generate_messages_cpp)
+
 
 

@@ -9,7 +9,7 @@
         <!-- 3) add_sdf.launch file, which is located under ~/src/Firmware/launch -->
         <!-- 4) initiators.sh, which is located under scripts directory, in motion package -->
         <!-- 5) add or remove corresponding modes in this file, below -->
-        <!-- 6) local_to_global_coords() function, in collision_avoidance.cpp of motion package, an maybe num_of_positions_kept variabel as well -->
+        <!-- 6) local_to_global_coords() function, in on_target_conflict.py of motion package -->
 
         <!-- declare flight height for swarm to fly -->
         <param name="patrolHeight" type="double" value="9" />
@@ -18,7 +18,10 @@
         <param name="overheatHeight" type="double" value="5" />
 
         <!-- declare safe distnce from obstacles -->
-        <param name="safeDistance" type="double" value="1.5" />
+        <param name="safeDistance" type="double" value="1" />
+
+        <!-- declare declare distance from which UAVs detect target and obstacles -->
+        <param name="detectionDistance" type="double" value="3" />
 
         <!-- declare initial mode for each UAV -->\
         <param name="mode0" type="str" value="patrol" />

@@ -56,7 +56,7 @@ pygame.init()
 
 X_DIM = 70
 Y_DIM = 70 # if you change dimension change displacement accordingly in utils.py
-VIEWING_RANGE = 3
+VIEWING_RANGE = rospy.get_param("/detectionDistance")
 
 
 # Set the HEIGHT and WIDTH of the screen
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     target_checker = []
     
     rospy.init_node('main_node', anonymous=False)
-    rate = rospy.Rate(1)  # 1hz
+    rate = rospy.Rate(10)  # 1hz
 
 
     for ID in range(swarmPopulation):
@@ -190,7 +190,6 @@ if __name__ == "__main__":
 
     target_point_for_UAV = [] # 'x<x_coordinate>y<y_coordinate>'
         
-    # target_setter = [] # create separate objects for every UAV's setting_target handler
     target_pub = []
     target_point = [PoseStamped()]*swarmPopulation 
     target_coords = []
@@ -199,7 +198,6 @@ if __name__ == "__main__":
         target_coords.append(stateNameToCoords(target_point_for_UAV[ID])) 
 
         target_point[ID] = Dstar_to_ROS_coordinates(target_coords[ID][0], target_coords[ID][1], ID)
-        # target_setter.append(setting_target(ID))
         target_point_topic = "uav" + str(ID) + "/motion/position/global/target"
         target_pub.append(rospy.Publisher(target_point_topic, PoseStamped, queue_size=10))
 
