@@ -6,7 +6,6 @@ from utils import  ROS_to_Dstar_coordinates, stateNameToCoords
 import rospy
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Point
-from motion.srv import new_point, new_pointResponse
 
 
 """ ******************* """
@@ -127,7 +126,7 @@ def assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_c
     """ print("on_detect_UAVS are: ")
     print(on_detect_UAVS) """
 
-    return assigned_areas
+    return assigned_areas, on_detect_UAVS
 
 
 def locate_obstacles():
@@ -142,3 +141,19 @@ def locate_obstacles():
     (obs['telephone_pole'].x, obs['telephone_pole'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole'].x, obs['telephone_pole'].y)    
 
     return obs 
+
+def set_UAVs_as_obstacles (swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM):
+    safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
+    for id in range(swarmPopulation):
+        if id != ID:
+            for i in range(1,-1, -1):
+                for x in range( two_last_waypoints[ID][i][1] - safeDistance, two_last_waypoints[ID][i][1] + safeDistance + 1):
+                    for y in range( two_last_waypoints[ID][i][0] - safeDistance, two_last_waypoints[ID][i][0] + safeDistance + 1):
+                        if x in range(X_DIM) and y in range(Y_DIM): # if given cell doesn't surpass map dimensions
+                            if i == 1: # clear obstacle cells set from previous UAV position
+                                graph_for_UAV[id].cells[x][y] = 0
+                            if i == 0: # set current UAV position as obstacle for the rest of the drones
+                                graph_for_UAV[id].cells[x][y] = -1 
+
+
+    return graph_for_UAV

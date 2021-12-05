@@ -18,7 +18,7 @@
         <param name="overheatHeight" type="double" value="5" />
 
         <!-- declare safe distnce from obstacles -->
-        <param name="safeDistance" type="double" value="1" />
+        <param name="safeDistance" type="int" value="1" />
 
         <!-- declare declare distance from which UAVs detect target and obstacles -->
         <param name="detectionDistance" type="double" value="3" />

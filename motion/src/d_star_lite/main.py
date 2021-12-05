@@ -5,6 +5,7 @@ import heapq
 from pickle import TRUE
 import pygame
 from random import randint
+import operator
 
 from graph import Node, Graph
 from grid import GridWorld
@@ -12,6 +13,7 @@ from utils import stateNameToCoords, coordsToStateName, Dstar_to_ROS_coordinates
 from d_star_lite import initDStarLite, moveAndRescan
 from ROS_functions import *
 from motion.srv import on_target, on_targetResponse
+from motion.srv import new_point, new_pointResponse
 
 
 
@@ -82,6 +84,7 @@ made_it = [False]*(swarmPopulation +1)
 # To manage how fast the screen updates
 clock = pygame.time.Clock()
 
+
 """ ******************* """
 """ FUNCTIONS """
 """ ******************* """
@@ -94,6 +97,12 @@ def new_patrol_subtarget(id_param, center):
 
     new_target_x = randint(center[0] - math.floor(subarea_length/2), center[0] + math.floor(subarea_length/2))
     new_target_y = randint(center[1] - math.floor(subarea_width/2), center[1] + math.floor(subarea_width/2))
+    
+    while new_target_x not in range(X_DIM): # get new x coordinate for target if the given surpasses map dimensions
+        new_target_x = randint(center[0] - math.floor(subarea_length/2), center[0] + math.floor(subarea_length/2))
+    while new_target_y  not in range(Y_DIM): # get new y coordinate for target if the given surpasses map dimensions
+        new_target_y = randint(center[1] - math.floor(subarea_width/2), center[1] + math.floor(subarea_width/2))
+    
     new_target = [new_target_x, new_target_y]
     target_point_for_UAV[id_param] = coordsToStateName(new_target)
     target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
@@ -223,7 +232,7 @@ if __name__ == "__main__":
     # assing patrol areas to swarm drones
     on_patrol_population, x_divider, y_divider = calculate_on_patrol_population(swarmPopulation, sensed_overheat)
     patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
-    assigned_areas = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, "no detected overheat yet")
+    assigned_areas, on_detect_UAVS = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, "no detected overheat yet")
 
     basicfont = pygame.font.SysFont('Comic Sans MS', 16)
 
@@ -238,18 +247,34 @@ if __name__ == "__main__":
             del(patrol_centers)
             patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
             del(assigned_areas)
-            assigned_areas = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at )
-            for ID in range(swarmPopulation):
-                if ID not in assigned_areas:
-                    rospy.set_param("mode" + str(ID), "detect") # set UAV's mode to detect
-                    target_overheated_point(ID, overheat_sensed_at) # set overheated point as a terget for UAVs on detect mode
-                    
-                    while True:
-                        if target_pub[ID].get_num_connections() > 0:
-                            target_pub[ID].publish(target_point[ID])
-                            break
-                        else:
-                            rate.sleep()
+            del(on_detect_UAVS)
+            assigned_areas, on_detect_UAVS = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at )
+            on_detect_circle = {} 
+            for ID in on_detect_UAVS:
+                rospy.set_param("mode" + str(ID), "detect") # set UAV's mode to detect
+                target_overheated_point(ID, overheat_sensed_at) # set overheated point as a terget for UAVs on detect mode
+                on_detect_circle[ID] = False
+                
+                while True:
+                    if target_pub[ID].get_num_connections() > 0:
+                        target_pub[ID].publish(target_point[ID])
+                        break
+                    else:
+                        rate.sleep()
+
+        if sensed_overheat and overheat_sensed_at is "":
+            if min(on_detect_circle.items(), key=operator.itemgetter(1))[1]: # if every drone in detect mode is circling the overheated point
+                print("lalala")
+                for ID in on_detect_circle:
+                    while (get_UAV_position(ID) is not two_last_waypoints[ID][0]): # if current position is the same as the last waypoint sent
+                        print(get_UAV_position(ID), pos_coords[ID])
+                     ##################
+            # sensed_overheat = False
+            # on_patrol_population, x_divider, y_divider = calculate_on_patrol_population(swarmPopulation, sensed_overheat)
+            # del(patrol_centers)
+            # patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
+            # del(assigned_areas)
+            # assigned_areas, on_detect_UAVS = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at )
 
                     
 
@@ -263,10 +288,7 @@ if __name__ == "__main__":
                 pos_coords[ID] = stateNameToCoords(current_position_for_UAV[ID])
                 
                 two_last_waypoints[ID] = [pos_coords[ID], two_last_waypoints[ID][0]]
-                for id in range(swarmPopulation): # consider UAV's current location as obstacle for the rest of the UAVs
-                    if id != ID:
-                        graph_for_UAV[id].cells[two_last_waypoints[ID][0][1]][two_last_waypoints[ID][0][0]] = -1
-                        graph_for_UAV[id].cells[two_last_waypoints[ID][1][1]][two_last_waypoints[ID][1][0]] = 0
+                graph_for_UAV = set_UAVs_as_obstacles(swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM)
 
                 new_waypoint[ID] = Dstar_to_ROS_coordinates(pos_coords[ID][0], pos_coords[ID][1], ID)
                 waypoint_ready[ID] = True
@@ -287,6 +309,7 @@ if __name__ == "__main__":
                     made_it[ID] = False
                     can_accept_overheated_point[ID] = True
                 elif rospy.get_param("/mode" + str(ID)) == "detect":
+                    on_detect_circle[ID] = True
                     print(str(ID)+ "made it to overheated point")    
 
         if not made_it[-1] and min(made_it[:-1]): # min(made_it[:-1]) returns False if at least one of the UAVs has not reached destination

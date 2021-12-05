@@ -14,13 +14,16 @@ using namespace std;
 #define PI 3.14159265
 int deg;
 double rad;
-bool entered_detection_circle = false;
+bool circling_target = false;
 double detection_circle_x;
 double detection_circle_y;
 
 float detectionDistance;
 double patrolHeight;
 double overheatHeight;
+string mode = "patrol";
+string overheat_sensed_at;
+
 
 double dx;
 double dy;
@@ -32,6 +35,7 @@ mavros_msgs::CommandBool arm_cmd;
 geometry_msgs::PoseStamped take_off_point_local;
 geometry_msgs::PoseStamped take_off_point_global;
 geometry_msgs::PoseStamped waypoint_local;
+geometry_msgs::PoseStamped last_waypoint;
 geometry_msgs::PoseStamped target_global;
 geometry_msgs::PoseStamped patrol_target_global;
 geometry_msgs::PoseStamped patrol_target_local;
@@ -40,11 +44,10 @@ geometry_msgs::PoseStamped overheat_target_global;
 motion::new_point waypoint_global_srv;
 motion::on_target on_target_srv;
 
-string mode = "patrol";
-
 bool reached_waypoint = false;
 bool got_overheat_target = false;
 bool recieved_new_target = false;
+bool waiting_to_be_on_patrol = false;
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg){ // current state of the autopilot 
     current_state = *msg;
@@ -54,6 +57,7 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){ // current state of the 
 void position_local_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // current local position
     position_local = *msg;
 }
+
 
 void target_point_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){ // current global target(either for patrol or for detected overheat)
     target_global = *msg;
@@ -142,13 +146,13 @@ void check_for_conflict(int id, geometry_msgs::Point my_pos, float allow_entranc
 
         if (mode == "detect"){
             ROS_INFO_STREAM("in function");
-            while (dist < allow_entrance_dist){
+            while (dist < allow_entrance_dist && ros::ok()){
                 const geometry_msgs::PoseStamped::ConstPtr& msg = ros::topic::waitForMessage<geometry_msgs::PoseStamped>
                 ("uav" + to_string(other_UAV_id) + "/motion/position/global");
                 other_UAV_pos = *msg;
-
+                ROS_INFO_STREAM("mine " << my_pos << " and " << other_UAV_pos.pose.position << "with ID: " << other_UAV_id);
                 dist = distance(my_pos.x, my_pos.y, other_UAV_pos.pose.position.x, other_UAV_pos.pose.position.y);
-                ROS_INFO_STREAM(dist);
+                ROS_INFO_STREAM("in check for conflict " << dist );
             }
         }
     }
@@ -278,13 +282,14 @@ int main(int argc, char **argv)
                 waypoint_global_srv.request.ready = true;
                 waypoint_global_srv.response.ready = false;
                 ROS_INFO_STREAM("reached waypoint!" << waypoint_global_srv.response.new_point.pose.position << "Wainting for new waypoint...");
-                while(!waypoint_global_srv.response.ready){ // brakes when response is ready
+                while(!waypoint_global_srv.response.ready && ros::ok()){ // brakes when response is ready
                     if(waypoint_client.call(waypoint_global_srv)){
                     }
                     waypoint_local_pub.publish(waypoint_local); // keep streaming previous waypoint setpoint until you get the new one
                     global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                 }
                 waypoint_local = local_to_global_coords(ID, waypoint_global_srv.response.new_point, -1);
+                global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                 reached_waypoint = false;
                 ROS_INFO_STREAM("UAV" << ID << " trying to reach patrol waypoint...\n");
             }
@@ -293,13 +298,13 @@ int main(int argc, char **argv)
                 
                 on_target_srv.request.arrival = true;
                 on_target_srv.response.arrival_granted = false;
-                while(!on_target_srv.response.arrival_granted){
+                while(!on_target_srv.response.arrival_granted && ros::ok()){
                     if(on_target_client.call(on_target_srv)){ // notify main.py that this UAV reached patrol subtarget
                         ROS_INFO_STREAM("UAV" << ID << " reached patrol target");
                     }
                 }
                 
-                while (target_global.pose.position == patrol_target_global.pose.position){
+                while (target_global.pose.position == patrol_target_global.pose.position && ros::ok()){
                     waypoint_local_pub.publish(waypoint_local); // keep streaming patrol subtarget setpoint until UAV gets a new patrol subtarget
                     global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                     ros::spinOnce();
@@ -316,13 +321,13 @@ int main(int argc, char **argv)
 
         if(mode == "detect"){
             // ROS_INFO_STREAM("UAV" << ID << "on detect mode");
-            while (!got_overheat_target){
+            while (!got_overheat_target && ros::ok()){
                 if (overheatHeight != target_global.pose.position.z){
                     ros::spinOnce();
                     rate.sleep();
                 }
                 else{
-                    overheat_target_global =  target_global; // new subtarget is set
+                    overheat_target_global =  target_global; // overheated point target is set
                     overheat_target_local = local_to_global_coords(ID, overheat_target_global, -1);
                     ROS_INFO_STREAM("overheat target is:\n " << overheat_target_global.pose.position);
                     got_overheat_target = true;
@@ -337,13 +342,14 @@ int main(int argc, char **argv)
                 waypoint_global_srv.request.ready = true;
                 waypoint_global_srv.response.ready = false;
                 ROS_INFO_STREAM("reached waypoint! Wainting for new waypoint...");
-                while(!waypoint_global_srv.response.ready){ // brakes when response is ready
+                while(!waypoint_global_srv.response.ready && ros::ok()){ // brakes when response is ready
                     if(waypoint_client.call(waypoint_global_srv)){
                     }
                     waypoint_local_pub.publish(waypoint_local); // keep streaming previous waypoint setpoint until you get the new one
                     global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                 }
                 waypoint_local = local_to_global_coords(ID, waypoint_global_srv.response.new_point, -1);
+                global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                 reached_waypoint = false;
                 ROS_INFO_STREAM("trying to reach waypoint...\n");
             }
@@ -352,15 +358,17 @@ int main(int argc, char **argv)
                 
                 on_target_srv.request.arrival = true;
                 on_target_srv.response.arrival_granted = false;
-                while(!on_target_srv.response.arrival_granted){
+                while(!on_target_srv.response.arrival_granted && ros::ok()){
                     if(on_target_client.call(on_target_srv)){ // notify main.py that this UAV reached overheated point
                         ROS_INFO_STREAM("UAV" << ID << " reached overheated area");
                     }
                 }
 
-                float circleRadious = 1.5;
+                float circleRadious = 2;
                 float allow_entrance_dist = detectionDistance - circleRadious + 0.5;
-                while(!recieved_new_target){
+                last_waypoint = waypoint_local;
+                ROS_INFO_STREAM("before circle UAV" << ID+" :" << local_to_global_coords(ID, position_local, 1).pose.position);
+                while(!recieved_new_target && ros::ok()){
                     for(deg = 0; deg <360; deg = deg + 10){
 
                         rad = deg * PI / 180.0;
@@ -368,36 +376,61 @@ int main(int argc, char **argv)
                         detection_circle_x = overheat_target_local.pose.position.x + cos(rad)*circleRadious;
                         detection_circle_y = overheat_target_local.pose.position.y + sin(rad)*circleRadious;
                         
-                        if (!entered_detection_circle){
+                        if (!circling_target){
                             waypoint_local_pub.publish(waypoint_local); //keep streaming current waypoint
-                            rate.sleep();
+                            global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
                             // choose entrance point, in order to not let UAV travel through the circle to enter it
                             if (distance(waypoint_local.pose.position.x, waypoint_local.pose.position.y, detection_circle_x, detection_circle_y) < allow_entrance_dist){
-                                
                                 check_for_conflict(id, local_to_global_coords(ID, position_local, 1).pose.position, allow_entrance_dist);
-                                entered_detection_circle = true;
+                                circling_target = true;
                             }
                         }else{
+                            if (ros::param::get("/overheat_sensed_at", overheat_sensed_at)){} // param /overheat_sensed_at declared in simulation.launch file of motion package
+
+                            
                             waypoint_local.pose.position.x = detection_circle_x;
                             waypoint_local.pose.position.y = detection_circle_y;
 
                             /* dx = waypoint_local.pose.position.x - overheat_target_local.pose.position.x;
                             dy = waypoint_local.pose.position.y - overheat_target_local.pose.position.y;
                             waypoint_local.pose.orientation.z = atan2(dx, dy); */
-                            ROS_INFO_STREAM(distance(overheat_target_local.pose.position.x,overheat_target_local.pose.position.y, waypoint_local.pose.position.x, waypoint_local.pose.position.y));
-
+                            
                             waypoint_local_pub.publish(waypoint_local);
+                            ROS_INFO_STREAM("circling " << local_to_global_coords(ID, position_local, 1).pose.position );
                             global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
+                            ros::spinOnce();
                             circle_rate.sleep();
+                            if (overheat_sensed_at == "" && distance(waypoint_local.pose.position.x, waypoint_local.pose.position.y, last_waypoint.pose.position.x, last_waypoint.pose.position.y) < allow_entrance_dist){
+                                waiting_to_be_on_patrol = true;
+                                break;
+                                /* if(distance(waypoint_local.pose.position.x, waypoint_local.pose.position.y, last_waypoint.pose.position.x, last_waypoint.pose.position.y) < allow_entrance_dist)
+                                ROS_INFO_STREAM("ela ela");
+                                waypoint_local_pub.publish(last_waypoint);
+                                ROS_INFO_STREAM(last_waypoint.pose.position << overheat_target_local.pose.position);
+                                global_pos_pub.publish(local_to_global_coords(ID, position_local, 1)); */
+                            }
                         }
+                        ros::spinOnce();
+                        rate.sleep();
                     }
+                    while (waiting_to_be_on_patrol && ros::ok()){
+                        waypoint_local_pub.publish(last_waypoint);
+                        // ROS_INFO_STREAM("after "" : "<<last_waypoint.pose.position << overheat_target_local.pose.position);
+                        global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
+                        ROS_INFO_STREAM("waiting " << local_to_global_coords(ID, position_local, 1).pose.position );
+                        // recieved_new_target = true;
+                        
+                        ros::spinOnce();
+                        rate.sleep();
+                    }
+                    // ros::spinOnce();
+                    // rate.sleep();
                 }
             }else{
                 waypoint_local_pub.publish(waypoint_local); // keep streaming setpoint until UAV reaches it
                 global_pos_pub.publish(local_to_global_coords(ID, position_local, 1));
             }
         }
-
         ros::spinOnce();
         rate.sleep();
     }

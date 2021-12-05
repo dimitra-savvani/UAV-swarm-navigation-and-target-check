@@ -4,7 +4,6 @@ from graph import Node, Graph
 from ROS_functions import locate_obstacles
 
 safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
-safeDistance = int(math.floor(safeDistance))
 
 class GridWorld(Graph):
     def __init__(self, x_dim, y_dim, connect8=True):
@@ -23,8 +22,8 @@ class GridWorld(Graph):
         obs = locate_obstacles()
 
         for obstacle in obs.keys():
-            for x in range(obs[obstacle].x - safeDistance, obs[obstacle].x + safeDistance ):
-                for y in range(obs[obstacle].y - safeDistance, obs[obstacle].y + safeDistance ):
+            for x in range(obs[obstacle].x - safeDistance, obs[obstacle].x + safeDistance + 1):
+                for y in range(obs[obstacle].y - safeDistance, obs[obstacle].y + safeDistance + 1):
                     self.cells[x][y] = -1
 
         self.generateGraphFromGrid()
