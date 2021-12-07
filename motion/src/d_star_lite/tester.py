@@ -1,5 +1,12 @@
+""" dicti = []
+
 for i in range(5):
     for j in range(5):
-        if i  not in range(4) and j not in range(4):
+            dicti.append([i,j])
 
-            print(i, j)
+if [7,2] in dicti:           
+    print(dicti) """
+
+
+a = [1,2,3]
+print (a[0:2])

@@ -120,8 +120,8 @@ def assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_c
                 if min_dist > distance(get_UAV_position(ID), patrol_centers[c_iterator]): # select which drone patrols each area, based on which one is closer to the center of that area
                     min_dist = distance(get_UAV_position(ID), patrol_centers[c_iterator])
                     assigned_areas[c_iterator] = ID
-    print("assigned_areas IDs are: ")
-    print(assigned_areas)
+    """ print("assigned_areas IDs are: ")
+    print(assigned_areas) """
 
     """ print("on_detect_UAVS are: ")
     print(on_detect_UAVS) """
@@ -142,6 +142,7 @@ def locate_obstacles():
 
     return obs 
 
+
 def set_UAVs_as_obstacles (swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM):
     safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
     for id in range(swarmPopulation):
@@ -154,6 +155,19 @@ def set_UAVs_as_obstacles (swarmPopulation, ID, graph_for_UAV, two_last_waypoint
                                 graph_for_UAV[id].cells[x][y] = 0
                             if i == 0: # set current UAV position as obstacle for the rest of the drones
                                 graph_for_UAV[id].cells[x][y] = -1 
+
+
+    return graph_for_UAV
+
+
+def clear_UAV_obs_cells (swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM):
+    safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
+    for id in range(swarmPopulation):
+        if id != ID:
+            for x in range( two_last_waypoints[ID][0][1] - safeDistance, two_last_waypoints[ID][0][1] + safeDistance + 1):
+                for y in range( two_last_waypoints[ID][0][0] - safeDistance, two_last_waypoints[ID][0][0] + safeDistance + 1):
+                    if x in range(X_DIM) and y in range(Y_DIM): # if given cell doesn't surpass map dimensions                            
+                        graph_for_UAV[id].cells[x][y] = 0
 
 
     return graph_for_UAV

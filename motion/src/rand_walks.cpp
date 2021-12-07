@@ -6,9 +6,41 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
-#include <tuple>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using namespace std;
+
+/* ******************* */
+/* DECLARATIONS */
+/* ******************* */
+int target_x_UAV0 [5] = {17, 2, 9, -24, 31};
+int target_y_UAV0 [5] = {14, 3, -25, 23, -2};
+int target_iterator0 = 0;
+
+int target_x_UAV1 [5] = {-17, -20, 23, 12, 1};
+int target_y_UAV1 [5] = {14, 3, 4, -13, 23};
+int target_iterator1 = 0;
+
+int target_x_UAV2 [5] = {17, 3, -25, 23, -2};
+int target_y_UAV2 [5] = {-14, -20, 23, 12, 1};
+int target_iterator2 = 0;
+
+int target_x_UAV3 [5] = {-17, -13, 23, 17, 3};
+int target_y_UAV3 [5] = {-14, 23, 1, -3, 10};
+int target_iterator3 = 0;
+
+bool reached_subtarget = false;
+bool final_target = false;
+double patrolHeight;
+
+geometry_msgs::PoseStamped local_target; // for setting wanted goal location (local coordinates) 
+geometry_msgs::PoseStamped global_target; // for ploting goal positions at plot.py
+
+
+/* ******************* */
+/* CALLBSCKS */
+/* ******************* */
 
 // We create a simple callback which will save the current state of the autopilot 
 mavros_msgs::State current_state;
@@ -16,13 +48,38 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
 
-geometry_msgs::PoseStamped current_position; // for comparing current position(local) to wanted goal location(local)
-void current_position_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
-    current_position = *msg;
+geometry_msgs::PoseStamped position_local; // for comparing current position(local) to wanted goal location(local)
+void position_local_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
+    position_local = *msg;
 }
 
-geometry_msgs::PoseStamped local_target; // for setting wanted goal location (local coordinates) 
-geometry_msgs::PoseStamped global_target; // for ploting goal positions at plot.py
+/* ******************* */
+/* FUCTIONS */
+/* ******************* */
+
+geometry_msgs::PoseStamped local_to_global_coords(string ID, geometry_msgs::PoseStamped pos, int direction){
+    // direction controlls whether the coordinates are converted from local to global or from global to local, should either be 1 or -1.
+    
+    if (ID == "0"){
+        pos.pose.position.x -= 17*direction;
+        pos.pose.position.y += 14*direction;
+    }
+    else if (ID == "1"){
+       pos.pose.position.x += 17*direction;
+       pos.pose.position.y += 14*direction;
+    }
+    else if (ID == "2"){
+        pos.pose.position.x -= 17*direction;
+        pos.pose.position.y -= 14*direction;
+    }
+    else if (ID == "3"){
+        pos.pose.position.x += 17*direction;
+        pos.pose.position.y -= 14*direction;
+    }
+
+    return pos;
+} 
+
 void give_target(string ID){
     /* cout << "dose x:" << endl;
     cin >> local_target.pose.position.x;
@@ -31,33 +88,63 @@ void give_target(string ID){
     cout << "dose z:" << endl;
     cin >> local_target.pose.position.z; */
 
-    local_target.pose.position.x = rand() % 30;
-    local_target.pose.position.y = rand() % 30;
-    local_target.pose.position.z = rand() % 5 + 1;
-
-    global_target.pose.position.x = local_target.pose.position.x;
-    global_target.pose.position.y = local_target.pose.position.y;
-
     if (ID == "0"){
-        global_target.pose.position.x = global_target.pose.position.x + 15;
-    }
-    else if (ID == "1"){
-        global_target.pose.position.x = global_target.pose.position.x - 15;
+        global_target.pose.position.x =  target_x_UAV0[target_iterator0];
+        global_target.pose.position.y =  target_y_UAV0[target_iterator0];
+        target_iterator0++;
+        if (target_iterator0 == 5){
+            final_target = true;
+        }
+    }else if (ID == "1"){
+        global_target.pose.position.x =  target_x_UAV1[target_iterator1];
+        global_target.pose.position.y =  target_y_UAV1[target_iterator1];
+        target_iterator1++;
+        if (target_iterator0 == 5){
+            final_target = true;
+        }
     }
     else if (ID == "2"){
-        global_target.pose.position.y = global_target.pose.position.y + 15;
+        global_target.pose.position.x =  target_x_UAV2[target_iterator2];
+        global_target.pose.position.y =  target_y_UAV2[target_iterator2];
+        target_iterator2++;
+        if (target_iterator0 == 5){
+            final_target = true;
+        }
     }
     else if (ID == "3"){
-        global_target.pose.position.y = global_target.pose.position.y - 15;
+        global_target.pose.position.x =  target_x_UAV3[target_iterator3];
+        global_target.pose.position.y =  target_y_UAV3[target_iterator3];
+        target_iterator3++;
+        if (target_iterator0 == 5){
+            final_target = true;
+        }
     }
-    // else if (ID == "4"){
-    //     global_target.pose.position.x = global_target.pose.position.x + 31;
-    // }
 
-    
+
+    /* local_target.pose.position.x = rand() % 30;
+    local_target.pose.position.y = rand() % 30;
+    local_target.pose.position.z = rand() % 5 + 1; */
+
+    local_target = local_to_global_coords(ID, global_target, -1);
 
     ROS_INFO("%f\n%f\n%f\n", global_target.pose.position.x, global_target.pose.position.y, local_target.pose.position.z);
 }
+
+bool has_reached_subtarget(geometry_msgs::Point local_target_, geometry_msgs::Point position_local_){
+    if(abs(local_target_.x - position_local_.x)<0.1){
+        if(abs(local_target_.y - position_local_.y)<0.1){
+            if(abs(local_target_.z - position_local_.z)<0.1){ //if drone reaches goal take_off position
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+/* ******************* */
+/* NODE */
+/* ******************* */
 
 int main(int argc, char **argv)
 {
@@ -75,7 +162,8 @@ int main(int argc, char **argv)
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>(uav + "/mavros/state", 10, state_cb);
     ros::Publisher local_target_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/mavros/setpoint_position/local", 10);
     ros::Publisher global_target_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/motion/target_position/global", 10);
-    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, current_position_cb);
+    ros::Publisher global_pos_pub = nh.advertise<geometry_msgs::PoseStamped>(uav + "/motion/position/global", 1);
+    ros::Subscriber local_pos = nh.subscribe<geometry_msgs::PoseStamped>(uav + "/mavros/local_position/pose", 10, position_local_cb);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>(uav + "/mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>(uav + "/mavros/set_mode");
 
@@ -97,7 +185,14 @@ int main(int argc, char **argv)
 
     /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
     coordinates to the standard ENU frame and vice-versa. This is why we set z to positive 2. */
-    give_target(ID);
+    local_target.pose.position.x = 0;
+    local_target.pose.position.y = 0;
+    if (ros::param::get("/patrolHeight", patrolHeight)){}
+    local_target.pose.position.z = patrolHeight;
+    global_target = local_to_global_coords(ID, local_target, 1);
+    /* tf2::Quaternion myQuaternion;
+    myQuaternion.setRPY( 0, 0, atan2(global_target.pose.position.x,global_target.pose.position.y) );
+    local_target.pose.orientation = tf2::toMsg(myQuaternion); */
 
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */
@@ -135,21 +230,21 @@ int main(int argc, char **argv)
             }
         }
 
-        local_target_pub.publish(local_target);
-        global_target_pub.publish(global_target);
 
-
-        if(abs(local_target.pose.position.x - current_position.pose.position.x)<0.1){
-            if(abs(local_target.pose.position.y - current_position.pose.position.y)<0.1){
-                if(abs(local_target.pose.position.z - current_position.pose.position.z)<0.1){
-                    //give_target(ID); // uncomment to let drone get new target when it reaches current target
-                } 
-            } 
+        if (!reached_subtarget){ // check if it reached setpoint, until it does
+            reached_subtarget = has_reached_subtarget(local_target.pose.position, position_local.pose.position);
         }
+        else if (reached_subtarget && !final_target){
+            ROS_INFO_STREAM("reached subtarget!" << local_target.pose.position << "Wainting for a new one...");
+            give_target(ID);
+            reached_subtarget = false;
+        }
+
+        local_target_pub.publish(local_target); // keep streaming setpoints
+        global_target_pub.publish(global_target); // stream global target for graph
+        global_pos_pub.publish(local_to_global_coords(ID, position_local, 1)); // publish current global position
         
         ros::spinOnce();
         rate.sleep();
     }
-
-    return 0;
 }

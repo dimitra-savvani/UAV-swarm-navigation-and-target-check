@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import rospy
-from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
 import sys
 import matplotlib.pyplot as plt
@@ -30,8 +29,8 @@ def route_callback(message, args):
     ID = args[0]
     global x_pos 
     global y_pos 
-    x_pos = message.pose.pose.position.x
-    y_pos = message.pose.pose.position.y 
+    x_pos = message.pose.position.x
+    y_pos = message.pose.position.y 
 
     flag_pos = 1
 
@@ -158,17 +157,6 @@ def animate(i, ID):
     global y_pos
     global flag_pos
     global i_goal
-    
-    if ID == "0" :
-        x_pos = x_pos + 15
-    elif ID == "1":
-        x_pos = x_pos - 15
-    elif ID == "2":
-        y_pos = y_pos + 15
-    elif ID == "3":
-        y_pos = y_pos - 15
-    # elif ID == "4":
-    #     x_pos = x_pos + 31
 
 
     if flag_pos != 0:
@@ -202,9 +190,9 @@ def trajectory_plot():
     
     ID = sys.argv[1]
     uav = "uav" + ID
-    route_topic = uav + "/mavros/global_position/local" 
+    route_topic = uav + "/motion/position/global"     
     target_topic = uav + "/motion/target_position/global" 
-    rospy.Subscriber(route_topic, Odometry, route_callback, (ID)) 
+    rospy.Subscriber(route_topic, PoseStamped, route_callback, (ID)) 
     rospy.Subscriber(target_topic, PoseStamped, goal_callback, (ID))
 
     ani = FuncAnimation(plt.gcf(), animate, fargs=(ID,), interval=1000) 

@@ -12,10 +12,10 @@
         <!-- 6) local_to_global_coords() function, in on_target_conflict.py of motion package -->
 
         <!-- declare flight height for swarm to fly -->
-        <param name="patrolHeight" type="double" value="9" />
+        <param name="patrolHeight" type="double" value="8" />
 
         <!-- declare flight height for swarm to fly -->
-        <param name="overheatHeight" type="double" value="5" />
+        <param name="overheatHeight" type="double" value="6" />
 
         <!-- declare safe distnce from obstacles -->
         <param name="safeDistance" type="int" value="1" />
@@ -48,19 +48,9 @@
                 output="screen"
         />
 
-        <!-- <node pkg="motion"
-                type="main.py" name="run_main"
-                output="screen"
-        /> -->
-
         <node pkg="motion"
                 type="main.sh" name="run_mian"
                 output="screen"
         />
-
-        <!-- <node pkg="motion"
-                type="collision_avoidance.sh" name="run_collision_avoidance"
-                output="screen"
-        /> -->
 
 </launch>

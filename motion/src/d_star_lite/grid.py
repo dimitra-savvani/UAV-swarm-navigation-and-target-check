@@ -18,13 +18,14 @@ class GridWorld(Graph):
         self.connect8 = connect8
         self.graph = {}
         # placing obstacles
-
+        self.static_obs_cells = []
         obs = locate_obstacles()
-
+        
         for obstacle in obs.keys():
             for x in range(obs[obstacle].x - safeDistance, obs[obstacle].x + safeDistance + 1):
                 for y in range(obs[obstacle].y - safeDistance, obs[obstacle].y + safeDistance + 1):
                     self.cells[x][y] = -1
+                    self.static_obs_cells.append([x,y])
 
         self.generateGraphFromGrid()
         # self.printGrid()
@@ -77,3 +78,7 @@ class GridWorld(Graph):
                     node.parents['x' + str(i) + 'y' + str(j + 1)] = edge
                     node.children['x' + str(i) + 'y' + str(j + 1)] = edge
                 self.graph['x' + str(i) + 'y' + str(j)] = node
+
+    def get_static_obs_cells(self):
+        # print(self.static_obs_cells)
+        return self.static_obs_cells
