@@ -15,7 +15,7 @@
         />
 
         <node pkg="motion"
-        type="rand_walks.sh" name="run_rand_walks"
+        type="no_d_star_walks.sh" name="run_no_d_star_walks"
         output="screen"
         />
 

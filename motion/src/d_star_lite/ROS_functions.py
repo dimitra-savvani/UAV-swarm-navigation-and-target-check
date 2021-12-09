@@ -135,25 +135,53 @@ def locate_obstacles():
     # the obstacle positions have to correspond to the .world file that is called
     # the .world that is called, is specified in the  ~/src/Firmware/launch/simulation.launch 
     obs = {} 
-    obs['telephone_pole'] = Point()
-    obs['telephone_pole'].x, obs['telephone_pole'].y = 3, 4
+    obs['telephone_pole0'] = Point()
+    obs['telephone_pole0'].x, obs['telephone_pole0'].y = -31, -28
+    (obs['telephone_pole0'].x, obs['telephone_pole0'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole0'].x, obs['telephone_pole0'].y)    
 
-    (obs['telephone_pole'].x, obs['telephone_pole'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole'].x, obs['telephone_pole'].y)    
+    obs['telephone_pole1'] = Point()
+    obs['telephone_pole1'].x, obs['telephone_pole1'].y = -31, -10
+    (obs['telephone_pole1'].x, obs['telephone_pole1'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole1'].x, obs['telephone_pole1'].y)   
+
+    obs['telephone_pole2'] = Point()
+    obs['telephone_pole2'].x, obs['telephone_pole2'].y = -31, 8
+    (obs['telephone_pole2'].x, obs['telephone_pole2'].y) = ROS_to_Dstar_coordinates(obs['telephone_pole2'].x, obs['telephone_pole2'].y)   
 
     return obs 
 
+def extra_obstacles_for_detect_mode():
+    extra_obs = {}
 
-def set_UAVs_as_obstacles (swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM):
+    extra_obs['Oak_tree0'] = Point()
+    extra_obs['Oak_tree0'].x, extra_obs['Oak_tree0'].y = 27, -28
+    (extra_obs['Oak_tree0'].x, extra_obs['Oak_tree0'].y) = ROS_to_Dstar_coordinates(extra_obs['Oak_tree0'].x, extra_obs['Oak_tree0'].y)   
+
+    return extra_obs
+
+def set_UAVs_as_obstacles (swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM, on_detect_UAVS):
     safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
+
+    set_new_pos_as_obs = True
     for id in range(swarmPopulation):
         if id != ID:
+
+            """ In case some UAVs are on detect mode, they only comprehend other UAVs on detect mode as obstacles,
+            while the rest remaining on patrol mode, comprehend only UAVs on patrol mode as obstacles"""
+            if on_detect_UAVS != []:
+                set_new_pos_as_obs = True 
+                if ID in on_detect_UAVS and id not in on_detect_UAVS: 
+                    set_new_pos_as_obs = False
+                if ID not in on_detect_UAVS and id in on_detect_UAVS:
+                    print("o")
+                    continue
+
             for i in range(1,-1, -1):
                 for x in range( two_last_waypoints[ID][i][1] - safeDistance, two_last_waypoints[ID][i][1] + safeDistance + 1):
                     for y in range( two_last_waypoints[ID][i][0] - safeDistance, two_last_waypoints[ID][i][0] + safeDistance + 1):
                         if x in range(X_DIM) and y in range(Y_DIM): # if given cell doesn't surpass map dimensions
                             if i == 1: # clear obstacle cells set from previous UAV position
                                 graph_for_UAV[id].cells[x][y] = 0
-                            if i == 0: # set current UAV position as obstacle for the rest of the drones
+                            if i == 0 and set_new_pos_as_obs: # set current UAV position as obstacle for the rest of the drones
                                 graph_for_UAV[id].cells[x][y] = -1 
 
 

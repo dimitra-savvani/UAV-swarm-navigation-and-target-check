@@ -23,10 +23,9 @@ x_goal_points = []
 y_goal_points = []
 
 
-def route_callback(message, args):
+def route_callback(message):
 
     global flag_pos
-    ID = args[0]
     global x_pos 
     global y_pos 
     x_pos = message.pose.position.x
@@ -34,10 +33,9 @@ def route_callback(message, args):
 
     flag_pos = 1
 
-def goal_callback(message, args):
+def goal_callback(message):
 
     global flag_goal
-    ID = args[0]
     global x_goal 
     global y_goal
     x_goal = message.pose.position.x
@@ -151,9 +149,8 @@ def annotate_current_goal():
 
 
 
-def animate(i, ID):
+def animate(i):
 
-    UAV_colors = {'0': 'r', '1': 'darkorange', '2': 'deepskyblue', '3': 'mediumorchid'}
     global x_pos 
     global y_pos
     global flag_pos
@@ -176,14 +173,14 @@ def animate(i, ID):
 
     plt.cla()
     
-    plt.title("Iris_" + ID)
+    plt.title("Iris")
     plt.xlabel('x coordinate')
     plt.ylabel('y coordinate')
-    plt.plot(x_pos_list, y_pos_list, label="Route", color = UAV_colors[ID])
+    plt.plot(x_pos_list, y_pos_list, label="Route", color = 'gray')
     plt.axis([-35, 35, -35, 35])
     plt.scatter(x_goal_list, y_goal_list, label="Goal_locations", color = 'firebrick')
     plt.scatter([-31, -31, -31],[-28, -10, 8], label = "Tall obstacles", color = 'g', marker='^')
-    plt.scatter([27],[-28], label = "Short obstacles", color = 'aquamarine', marker='^')
+    plt.scatter(27,-28, label = "Short obstacles", color = 'aquamarine', marker='^')
     annotate_current_goal()
     plt.legend(loc="upper right")
     
@@ -192,16 +189,15 @@ def trajectory_plot():
 
     rospy.init_node('trajectory_plot', anonymous=True)
     
-    ID = sys.argv[1]
-    uav = "uav" + ID
-    route_topic = uav + "/motion/position/global"     
-    target_topic = uav + "/motion/target_position/global" 
-    rospy.Subscriber(route_topic, PoseStamped, route_callback, (ID)) 
-    rospy.Subscriber(target_topic, PoseStamped, goal_callback, (ID))
 
-    ani = FuncAnimation(plt.gcf(), animate, fargs=(ID,), interval=1000) 
+    route_topic = "/motion/position/global"     
+    target_topic = "/motion/target_position/global" 
+    rospy.Subscriber(route_topic, PoseStamped, route_callback) 
+    rospy.Subscriber(target_topic, PoseStamped, goal_callback)
 
+    ani = FuncAnimation(plt.gcf(), animate, interval=1000) 
 
+    plt.tight_layout()
     plt.show()
     
     # spin() -> keeps python from exiting until this node is stopped

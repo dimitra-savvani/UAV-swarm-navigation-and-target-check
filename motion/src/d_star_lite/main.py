@@ -21,11 +21,12 @@ from motion.srv import new_point, new_pointResponse
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 220, 0)
+LIGHTGREEN = (180, 225, 185)
 GRAY1 = (145, 145, 102)
 GRAY2 = (77, 77, 51)
 BLUE = (0, 0, 80)
 RED = (255, 0, 0)
-ORANGE= (255, 100, 100)
+ORANGE= (255, 100, 0)
 LIGHTBLUE= (60, 150, 255)
 LIGHTPURPLE= (153, 30, 153)
 
@@ -80,6 +81,7 @@ done = False
 # The last cell becomes True when all drones reach destination  
 made_it = [False]*(swarmPopulation +1)
 
+extra_obs_cells = []
 
 # To manage how fast the screen updates
 clock = pygame.time.Clock()
@@ -120,16 +122,17 @@ def new_patrol_subtarget(id_param, center):
     pos_coords[id_param] = stateNameToCoords(current_position_for_UAV[id_param])
 
 def target_overheated_point(id_param, overheat_sensed_at):
-    
+    global extra_obs_cells
     graph_for_UAV[id_param] = GridWorld(X_DIM, Y_DIM)
-    static_obs_cells = graph_for_UAV[id_param].get_static_obs_cells()  
+    static_obs_cells = graph_for_UAV[id_param].get_static_obs_cells()
+    extra_obs_cells = graph_for_UAV[id_param].set_and_get_extra_obs()
     k_m[id_param] = 0
     starting_point_for_UAV[id_param] = current_position_for_UAV[id_param]
 
     target_point_for_UAV[id_param] = overheat_sensed_at
     target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
 
-    if target_coords[id_param] in static_obs_cells:
+    if target_coords[id_param] in static_obs_cells or target_coords[id_param] in extra_obs_cells:
         raise Exception("this location corresponds to an obstacle, try giving a different one")
 
     target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
@@ -288,7 +291,7 @@ if __name__ == "__main__":
                     rospy.set_param("mode" + str(ID), "patrol")
                 del(on_detect_UAVS)
                 assigned_areas, on_detect_UAVS = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at )
-                
+                extra_obs_cells = []
 
         for ID in range(swarmPopulation):
             if reached_waypoint_for_UAV[ID] and not made_it[ID]:
@@ -300,7 +303,7 @@ if __name__ == "__main__":
                 pos_coords[ID] = stateNameToCoords(current_position_for_UAV[ID])
                 
                 two_last_waypoints[ID] = [pos_coords[ID], two_last_waypoints[ID][0]]
-                graph_for_UAV = set_UAVs_as_obstacles(swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM)
+                graph_for_UAV = set_UAVs_as_obstacles(swarmPopulation, ID, graph_for_UAV, two_last_waypoints, X_DIM, Y_DIM, on_detect_UAVS)
 
                 new_waypoint[ID] = Dstar_to_ROS_coordinates(pos_coords[ID][0], pos_coords[ID][1], ID)
                 waypoint_ready[ID] = True
@@ -351,6 +354,7 @@ if __name__ == "__main__":
         # Draw the grid
         for row in range(Y_DIM):
             for column in range(X_DIM):
+                
                 color = WHITE
                 # if grid[row][column] == 1:
                 #      color = GREEN 
@@ -359,8 +363,12 @@ if __name__ == "__main__":
                 node_name = 'x' + str(column) + 'y' + str(row)
                 for ID in range(swarmPopulation):
                     if graph_for_UAV[ID].cells[row][column] == -1: # if there is an obstacle for any UAV (every UAV is considered as an obstacle to the others)
-                        pygame.draw.rect(screen, colors[graph_for_UAV[ID].cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
-                        node_name = 'x' + str(column) + 'y' + str(row) 
+                        if [row, column] not in extra_obs_cells: # if this is an obstacle only on detect mode, color it light green
+                            pygame.draw.rect(screen, colors[graph_for_UAV[ID].cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                            node_name = 'x' + str(column) + 'y' + str(row)
+                        else:
+                            pygame.draw.rect(screen, LIGHTGREEN, [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
+                            node_name = 'x' + str(column) + 'y' + str(row)
                         # print('unseen obstacle for uav: ', i, 'at',  node_name, 'with value', graph_for_UAV[i].cells[row][column])
                         break
                 for ID in range(swarmPopulation):

@@ -208,9 +208,13 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(rand_walks src/rand_walks.cpp)
-target_link_libraries(rand_walks ${catkin_LIBRARIES})
-#add_dependencies(rand_walks  motion_generate_messages_cpp)
+add_executable(no_d_star_walks_for_one src/no_d_star_walks_for_one.cpp)
+target_link_libraries(no_d_star_walks_for_one ${catkin_LIBRARIES})
+#add_dependencies(no_d_star_walks_for_one  motion_generate_messages_cpp)
+
+add_executable(no_d_star_walks src/no_d_star_walks.cpp)
+target_link_libraries(no_d_star_walks ${catkin_LIBRARIES})
+#add_dependencies(no_d_star_walks  motion_generate_messages_cpp)
 
 add_executable(initiator src/initiator.cpp)
 target_link_libraries(initiator ${catkin_LIBRARIES})

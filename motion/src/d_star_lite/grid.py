@@ -1,7 +1,7 @@
 import math
 import rospy
 from graph import Node, Graph
-from ROS_functions import locate_obstacles
+from ROS_functions import locate_obstacles, extra_obstacles_for_detect_mode
 
 safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
 
@@ -80,5 +80,17 @@ class GridWorld(Graph):
                 self.graph['x' + str(i) + 'y' + str(j)] = node
 
     def get_static_obs_cells(self):
+
         # print(self.static_obs_cells)
         return self.static_obs_cells
+
+    def set_and_get_extra_obs(self):
+        extra_obs = extra_obstacles_for_detect_mode()
+        extra_obs_cells = []
+
+        for obstacle in extra_obs.keys():
+            for x in range(extra_obs[obstacle].x - safeDistance, extra_obs[obstacle].x + safeDistance + 1):
+                for y in range(extra_obs[obstacle].y - safeDistance, extra_obs[obstacle].y + safeDistance + 1):
+                    self.cells[x][y] = -1
+                    extra_obs_cells.append([x,y])
+        return  extra_obs_cells

@@ -32,32 +32,58 @@
     </physics>
 
     <!-- Pine Trees -->
+    <!-- 5m tall -->
+
     <include>
       <name>Pine Tree0</name>
       <uri>model://Pine Tree</uri>
-      <pose>-8 -8 0 0 0 0</pose>
+      <pose>-8 -8 -0.5 0 0 0</pose>
     </include>
 
     <include>
       <name>Pine Tree1</name>
       <uri>model://Pine Tree</uri>
-      <pose>-1 -4 0 0 0 0</pose>
+      <pose>-9 -14 -0.5 0 0 0</pose>
     </include>
 
     <include>
       <name>Pine Tree2</name>
       <uri>model://Pine Tree</uri>
-      <pose>-9 -9 0 0 0 0</pose>
+      <pose>-9 -9 -0.5 0 0 0</pose>
     </include>
 
     <include>
       <name>Pine Tree3</name>
       <uri>model://Pine Tree</uri>
-      <pose>-10 -11 0 0 0 0</pose>
+      <pose>-10 -11 -0.5 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>Pine Tree4</name>
+      <uri>model://Pine Tree</uri>
+      <pose>-9 -12 -0.5 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>Pine Tree5</name>
+      <uri>model://Pine Tree</uri>
+      <pose>-10 -15 -0.5 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>Pine Tree6</name>
+      <uri>model://Pine Tree</uri>
+      <pose>-9 -13 -0.5 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>Pine Tree7</name>
+      <uri>model://Pine Tree</uri>
+      <pose>-10 -13 -0.5 0 0 0</pose>
     </include>
 
     <!--  Tree_1s -->
-
+    <!-- 2m tall -->
     <include>
       <name>Tree_10</name>
       <uri>model://Tree_1</uri>
@@ -71,6 +97,7 @@
     </include>
 
     <!--  Tree_2s -->
+    <!-- 4.5m tall -->
 
     <include>
       <name>Tree_20</name>
@@ -85,25 +112,21 @@
     </include>
 
     <!-- Oak Trees -->
+    <!-- 7m tall -->
 
     <include>
       <name>Oak Tree0</name>
       <uri>model://Oak tree</uri>
-      <pose>-9 12 0 0 0 0</pose>
+      <pose>27 -28 0 0 0 0</pose>
     </include>
 
-    <include>
-      <name>Oak Tree1</name>
-      <uri>model://Oak tree</uri>
-      <pose>-10 9 0 0 0 0</pose>
-    </include>
 
     <!-- fire_hydrant -->
 
     <include>
       <name>Oak Tree1</name>
       <uri>model://fire_hydrant</uri>
-      <pose>-11 3 0 0 0 0</pose>
+      <pose> 32 30 0 0 0 0</pose>
     </include>
 
     <!-- person walking -->
@@ -111,16 +134,45 @@
     <include>
       <name>person_walking</name>
       <uri>model://person_walking</uri>
-      <pose>-10 6 0 0 0 0</pose>
+      <pose> -31 0 0 0 0 0</pose>
     </include>
 
     <!-- telephone_pole -->
+    <!-- 9m tall -->
+    <include>
+      <name>telephone_pole0</name>
+      <uri>model://telephone_pole</uri>
+      <pose>-31 -28 0 0 0 0</pose>
+    </include>
 
     <include>
-      <name>telephone_pole</name>
+      <name>telephone_pole1</name>
       <uri>model://telephone_pole</uri>
-      <pose>3 4 0 0 0 0</pose>
+      <pose>-31 -10 0 0 0 0</pose>
     </include>
+
+    <include>
+      <name>telephone_pole2</name>
+      <uri>model://telephone_pole</uri>
+      <pose>-31 8 0 0 0 0</pose>
+    </include>
+
+    <!-- fire_station -->
+
+    <include>
+      <name>fire_station</name>
+      <uri>model://fire_station</uri>
+      <pose>-38 23 0 0 0 -1.5708</pose>
+    </include>
+
+    <!-- fire_truck -->
+
+    <include>
+      <name>fire_truck</name>
+      <uri>model://fire_truck</uri>
+      <pose>-36 2 0 0 0 3.142</pose>
+    </include>
+
 
     <!-- soil ground -->
 
@@ -494,6 +546,55 @@
       <name>soil box62</name>
       <uri>model://mud_box</uri>
       <pose>30 32 -0.2 0 0 1.5708</pose>
+    </include>
+
+
+    <include>
+      <name>soil box63</name>
+      <uri>model://mud_box</uri>
+      <pose> -40 -32 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box64</name>
+      <uri>model://mud_box</uri>
+      <pose> -40 -24 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box65</name>
+      <uri>model://mud_box</uri>
+      <pose>-40 -16 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box66</name>
+      <uri>model://mud_box</uri>
+      <pose>-40 -8 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box67</name>
+      <uri>model://mud_box</uri>
+      <pose>-40 0 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box68</name>
+      <uri>model://mud_box</uri>
+      <pose>-40 8 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box69</name>
+      <uri>model://mud_box</uri>
+      <pose>-40 16 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box70</name>
+      <uri>model://mud_box</uri>
+      <pose>-40 32 -0.2 0 0 1.5708</pose>
     </include>
     
   </world>

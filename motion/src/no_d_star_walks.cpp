@@ -14,21 +14,22 @@ using namespace std;
 /* ******************* */
 /* DECLARATIONS */
 /* ******************* */
-int target_x_UAV0 [5] = {17, 2, 9, -24, 31};
-int target_y_UAV0 [5] = {14, 3, -25, 23, -2};
-int target_iterator0 = 0;
+int target_x_UAV0 [5] = {17, 2, 26, -24, -8};
+int target_y_UAV0 [5] = {12, -20, 27, 18, -3};
 
 int target_x_UAV1 [5] = {-17, -20, 23, 12, 1};
-int target_y_UAV1 [5] = {14, 3, 4, -13, 23};
-int target_iterator1 = 0;
+int target_y_UAV1 [5] = {12, 3, 4, -13, 23};
 
-int target_x_UAV2 [5] = {17, 3, -25, 23, -2};
-int target_y_UAV2 [5] = {-14, -20, 23, 12, 1};
-int target_iterator2 = 0;
+int target_x_UAV2 [5] = {17, 3, -33, 23, -2};
+int target_y_UAV2 [5] = {-12, -20, 9, 12, 1};
 
 int target_x_UAV3 [5] = {-17, -13, 23, 17, 3};
-int target_y_UAV3 [5] = {-14, 23, 1, -3, 10};
-int target_iterator3 = 0;
+int target_y_UAV3 [5] = {-12, 23, 1, -3, 10};
+
+int target_x [5];
+int target_y [5];
+int target_iterator = 0;
+
 
 bool reached_subtarget = false;
 bool final_target = false;
@@ -80,6 +81,24 @@ geometry_msgs::PoseStamped local_to_global_coords(string ID, geometry_msgs::Pose
     return pos;
 } 
 
+void choose_target_arrays(string ID){
+    if (ID == "0"){
+        std::copy(std::begin(target_x_UAV0), std::end(target_x_UAV0), std::begin(target_x));
+        std::copy(std::begin(target_y_UAV0), std::end(target_y_UAV0), std::begin(target_y));
+    }else if (ID == "1"){
+        std::copy(std::begin(target_x_UAV1), std::end(target_x_UAV1), std::begin(target_x));
+        std::copy(std::begin(target_y_UAV1), std::end(target_y_UAV1), std::begin(target_y));
+    }
+    else if (ID == "2"){
+        std::copy(std::begin(target_x_UAV2), std::end(target_x_UAV2), std::begin(target_x));
+        std::copy(std::begin(target_y_UAV2), std::end(target_y_UAV2), std::begin(target_y));
+    }
+    else if (ID == "3"){
+        std::copy(std::begin(target_x_UAV3), std::end(target_x_UAV3), std::begin(target_x));
+        std::copy(std::begin(target_y_UAV3), std::end(target_y_UAV3), std::begin(target_y));
+    }
+}
+
 void give_target(string ID){
     /* cout << "dose x:" << endl;
     cin >> local_target.pose.position.x;
@@ -88,46 +107,22 @@ void give_target(string ID){
     cout << "dose z:" << endl;
     cin >> local_target.pose.position.z; */
 
-    if (ID == "0"){
-        global_target.pose.position.x =  target_x_UAV0[target_iterator0];
-        global_target.pose.position.y =  target_y_UAV0[target_iterator0];
-        target_iterator0++;
-        if (target_iterator0 == 5){
-            final_target = true;
-        }
-    }else if (ID == "1"){
-        global_target.pose.position.x =  target_x_UAV1[target_iterator1];
-        global_target.pose.position.y =  target_y_UAV1[target_iterator1];
-        target_iterator1++;
-        if (target_iterator0 == 5){
-            final_target = true;
-        }
-    }
-    else if (ID == "2"){
-        global_target.pose.position.x =  target_x_UAV2[target_iterator2];
-        global_target.pose.position.y =  target_y_UAV2[target_iterator2];
-        target_iterator2++;
-        if (target_iterator0 == 5){
-            final_target = true;
-        }
-    }
-    else if (ID == "3"){
-        global_target.pose.position.x =  target_x_UAV3[target_iterator3];
-        global_target.pose.position.y =  target_y_UAV3[target_iterator3];
-        target_iterator3++;
-        if (target_iterator0 == 5){
-            final_target = true;
-        }
-    }
-
-
-    /* local_target.pose.position.x = rand() % 30;
+        /* local_target.pose.position.x = rand() % 30;
     local_target.pose.position.y = rand() % 30;
     local_target.pose.position.z = rand() % 5 + 1; */
 
+    
+    global_target.pose.position.x =  target_x[target_iterator];
+    global_target.pose.position.y =  target_y[target_iterator];
+    target_iterator++;
+    ROS_INFO_STREAM("iterator is: " << target_iterator);
+    if (target_iterator == 5){
+        final_target = true;
+    }
+    
     local_target = local_to_global_coords(ID, global_target, -1);
 
-    ROS_INFO("%f\n%f\n%f\n", global_target.pose.position.x, global_target.pose.position.y, local_target.pose.position.z);
+    ROS_INFO_STREAM("New target is: \n" <<global_target.pose.position);
 }
 
 bool has_reached_subtarget(geometry_msgs::Point local_target_, geometry_msgs::Point position_local_){
@@ -185,6 +180,7 @@ int main(int argc, char **argv)
 
     /* Even though the PX4 Pro Flight Stack operates in the aerospace NED coordinate frame, MAVROS translates these 
     coordinates to the standard ENU frame and vice-versa. This is why we set z to positive 2. */
+    choose_target_arrays(ID);
     local_target.pose.position.x = 0;
     local_target.pose.position.y = 0;
     if (ros::param::get("/patrolHeight", patrolHeight)){}
@@ -235,7 +231,7 @@ int main(int argc, char **argv)
             reached_subtarget = has_reached_subtarget(local_target.pose.position, position_local.pose.position);
         }
         else if (reached_subtarget && !final_target){
-            ROS_INFO_STREAM("reached subtarget!" << local_target.pose.position << "Wainting for a new one...");
+            ROS_INFO_STREAM("reached subtarget!\n" << global_target.pose.position << "\nWainting for a new one...");
             give_target(ID);
             reached_subtarget = false;
         }
