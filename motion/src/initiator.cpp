@@ -409,7 +409,7 @@ int main(int argc, char **argv)
                             
                             waypoint_local.pose.position.x = detection_circle_x;
                             waypoint_local.pose.position.y = detection_circle_y; 
-                            myQuaternion.setRPY( 0, 0, -atan2(sin(rad),cos(rad)));
+                            myQuaternion.setRPY( 0, 0, -atan2(sin(rad),cos(rad)) - PI/2 );
                             waypoint_local.pose.orientation = tf2::toMsg(myQuaternion);
                             
                             waypoint_local_pub.publish(waypoint_local);
