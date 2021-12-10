@@ -51,6 +51,7 @@ bool got_overheat_target = false;
 bool received_new_target = false;
 bool waiting_to_be_on_patrol = false;
 
+tf2::Quaternion myQuaternion;
 
 /* ******************* */
 /* CALLBSCKS */
@@ -391,8 +392,8 @@ int main(int argc, char **argv)
 
                         rad = deg * PI / 180.0;
 
-                        detection_circle_x = overheat_target_local.pose.position.x + cos(rad)*circleRadius;
-                        detection_circle_y = overheat_target_local.pose.position.y + sin(rad)*circleRadius;
+                        detection_circle_x = overheat_target_local.pose.position.x + sin(rad)*circleRadius;
+                        detection_circle_y = overheat_target_local.pose.position.y + cos(rad)*circleRadius;
                         
                         if (!circling_target){
                             waypoint_local_pub.publish(waypoint_local); //keep streaming current waypoint
@@ -407,13 +408,8 @@ int main(int argc, char **argv)
 
                             
                             waypoint_local.pose.position.x = detection_circle_x;
-                            waypoint_local.pose.position.y = detection_circle_y;
-
-                            // dx = overheat_target_local.pose.position.x - waypoint_local.pose.position.x;
-                            // dy = overheat_target_local.pose.position.y - waypoint_local.pose.position.y;
-                            tf2::Quaternion myQuaternion;
-                            // myQuaternion.setRPY( 0, 0, atan2(dx, dy));
-                            myQuaternion.setRPY( 0, 0, atan(rad));
+                            waypoint_local.pose.position.y = detection_circle_y; 
+                            myQuaternion.setRPY( 0, 0, -atan2(sin(rad),cos(rad)));
                             waypoint_local.pose.orientation = tf2::toMsg(myQuaternion);
                             
                             waypoint_local_pub.publish(waypoint_local);
