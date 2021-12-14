@@ -136,7 +136,7 @@ Kill all terminals
 
 * Paste .launch files under ~/src/Firmware/launch
 
-*To control how many drones you want to be launched, when you launch multiple drones, comment or uncomment coresponding code lines on add_sdf.launch (if you need more than 10 drones, you have to add some sdf files as well.)
+* To control how many drones you want to be launched, when you launch multiple drones, comment or uncomment coresponding code lines on add_sdf.launch (if you need more than 10 drones, you have to add some sdf files as well.)
 
 * On a terminal:
 ```
