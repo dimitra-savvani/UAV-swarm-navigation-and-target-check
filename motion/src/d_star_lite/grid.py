@@ -1,7 +1,7 @@
 import math
 import rospy
 from graph import Node, Graph
-from ROS_functions import locate_obstacles, extra_obstacles_for_detect_mode
+from utils import locate_obstacles, extra_obstacles_for_detect_mode
 
 safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
 
@@ -18,14 +18,14 @@ class GridWorld(Graph):
         self.connect8 = connect8
         self.graph = {}
         # placing obstacles
-        self.static_obs_cells = []
+        self.static_obs_coords = []
         obs = locate_obstacles()
         
         for obstacle in obs.keys():
             for x in range(obs[obstacle].x - safeDistance, obs[obstacle].x + safeDistance + 1):
                 for y in range(obs[obstacle].y - safeDistance, obs[obstacle].y + safeDistance + 1):
-                    self.cells[x][y] = -1
-                    self.static_obs_cells.append([x,y])
+                    self.cells[y][x] = -1
+                    self.static_obs_coords.append([x,y])
 
         self.generateGraphFromGrid()
         # self.printGrid()
@@ -79,18 +79,18 @@ class GridWorld(Graph):
                     node.children['x' + str(i) + 'y' + str(j + 1)] = edge
                 self.graph['x' + str(i) + 'y' + str(j)] = node
 
-    def get_static_obs_cells(self):
+    def get_static_obs_coords(self):
 
-        # print(self.static_obs_cells)
-        return self.static_obs_cells
+        # print(self.static_obs_coords)
+        return self.static_obs_coords
 
     def set_and_get_extra_obs(self):
         extra_obs = extra_obstacles_for_detect_mode()
-        extra_obs_cells = []
+        extra_obs_coords = []
 
         for obstacle in extra_obs.keys():
             for x in range(extra_obs[obstacle].x - safeDistance, extra_obs[obstacle].x + safeDistance + 1):
                 for y in range(extra_obs[obstacle].y - safeDistance, extra_obs[obstacle].y + safeDistance + 1):
-                    self.cells[x][y] = -1
-                    extra_obs_cells.append([x,y])
-        return  extra_obs_cells
+                    self.cells[y][x] = -1 # cells are measured in row and columns
+                    extra_obs_coords.append([x,y])
+        return  extra_obs_coords

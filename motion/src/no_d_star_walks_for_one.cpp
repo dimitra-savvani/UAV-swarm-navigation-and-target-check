@@ -6,8 +6,6 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using namespace std;
 
@@ -130,9 +128,6 @@ int main(int argc, char **argv)
     if (ros::param::get("/patrolHeight", patrolHeight)){}
     local_target.pose.position.z = patrolHeight;
     global_target = local_target;
-    /* tf2::Quaternion myQuaternion;
-    myQuaternion.setRPY( 0, 0, atan2(global_target.pose.position.x,global_target.pose.position.y) );
-    local_target.pose.orientation = tf2::toMsg(myQuaternion); */
 
     /* Before entering Offboard mode, you must have already started streaming setpoints. Otherwise the mode switch will 
     be rejected. Here, 100 was chosen as an arbitrary amount. */

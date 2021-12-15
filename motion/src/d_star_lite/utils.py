@@ -15,13 +15,13 @@ def coordsToStateName(coords):
 
 def ROS_to_Dstar_coordinates(in_x, in_y):
     out_x = in_x + displacement
-    out_y = in_y + displacement
+    out_y = -in_y + displacement
 
     return out_x, out_y
 
 def Dstar_to_ROS_coordinates(in_x, in_y, ID):
     out_x = in_x - displacement
-    out_y = in_y - displacement
+    out_y = -(in_y - displacement)
 
     position = PoseStamped()
     position.pose.position.x = out_x
@@ -51,7 +51,8 @@ def get_UAV_position(ID):
     
     (current_coordinate[0], current_coordinate[1]) = ROS_to_Dstar_coordinates(current_coordinate[0], current_coordinate[1])
 
-    # print("got_current_point_from_initiator of UAV" + str(ID))
+    print("got_current_point_from_initiator of UAV" + str(ID))
+    print(raw_ROS_current_point.pose.position)
 
     return current_coordinate
 
@@ -99,16 +100,17 @@ def split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM):
     patrolHeight = rospy.get_param("/patrolHeight")
 
     # length and width of each UAVs patrol area
-    subarea_length  = math.ceil(X_DIM / x_divider)
-    subarea_width = math.ceil(Y_DIM / y_divider)
+    subarea_xdim  = math.ceil(X_DIM / x_divider)
+    subarea_ydim = math.ceil(Y_DIM / y_divider)
 
     patrol_centers = [] # patrol_centers of patrol areas
     for i in range(x_divider):
-        center_x = math.floor(subarea_length/2) + i*subarea_length
+        center_x = math.floor(subarea_xdim/2) + i*subarea_xdim
         for j in range(y_divider):
-            center_y = math.floor(subarea_width/2) + j*subarea_width
+            center_y = math.floor(subarea_ydim/2) + j*subarea_ydim
             patrol_centers.append([center_x, center_y, patrolHeight])
-    return patrol_centers, subarea_length, subarea_width
+    
+    return patrol_centers, subarea_xdim, subarea_ydim
 
 
 def distance(p1, p2): # calculate distance in 3 dimensions
@@ -200,13 +202,13 @@ def set_UAVs_as_obstacles (swarmPopulation, ID, graph_for_UAV, two_last_waypoint
                     continue
 
             for i in range(1,-1, -1):
-                for x in range( two_last_waypoints[ID][i][1] - safeDistance, two_last_waypoints[ID][i][1] + safeDistance + 1):
-                    for y in range( two_last_waypoints[ID][i][0] - safeDistance, two_last_waypoints[ID][i][0] + safeDistance + 1):
-                        if x in range(X_DIM) and y in range(Y_DIM): # if given cell doesn't surpass map dimensions
+                for row in range( two_last_waypoints[ID][i][1] - safeDistance, two_last_waypoints[ID][i][1] + safeDistance + 1):
+                    for column in range( two_last_waypoints[ID][i][0] - safeDistance, two_last_waypoints[ID][i][0] + safeDistance + 1):
+                        if column in range(X_DIM) and row in range(Y_DIM): # if given cell doesn't surpass map dimensions
                             if i == 1: # clear obstacle cells set from previous UAV position
-                                graph_for_UAV[id].cells[x][y] = 0
+                                graph_for_UAV[id].cells[row][column] = 0
                             if i == 0 and set_new_pos_as_obs: # set current UAV position as obstacle for the rest of the drones
-                                graph_for_UAV[id].cells[x][y] = -1 
+                                graph_for_UAV[id].cells[row][column] = -1 
 
 
     return graph_for_UAV
@@ -216,10 +218,10 @@ def clear_UAV_obs_cells (swarmPopulation, ID, graph_for_UAV, two_last_waypoints,
     safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
     for id in range(swarmPopulation):
         if id != ID:
-            for x in range( two_last_waypoints[ID][0][1] - safeDistance, two_last_waypoints[ID][0][1] + safeDistance + 1):
-                for y in range( two_last_waypoints[ID][0][0] - safeDistance, two_last_waypoints[ID][0][0] + safeDistance + 1):
-                    if x in range(X_DIM) and y in range(Y_DIM): # if given cell doesn't surpass map dimensions                            
-                        graph_for_UAV[id].cells[x][y] = 0
+            for row in range( two_last_waypoints[ID][0][1] - safeDistance, two_last_waypoints[ID][0][1] + safeDistance + 1):
+                for column in range( two_last_waypoints[ID][0][0] - safeDistance, two_last_waypoints[ID][0][0] + safeDistance + 1):
+                    if column in range(X_DIM) and row in range(Y_DIM): # if given cell doesn't surpass map dimensions                            
+                        graph_for_UAV[id].cells[row][column] = 0
 
 
     return graph_for_UAV

@@ -80,7 +80,7 @@ done = False
 # The last cell becomes True when all drones reach destination  
 made_it = [False]*(swarmPopulation +1)
 
-extra_obs_cells = []
+extra_obs_coords = []
 
 # To manage how fast the screen updates
 clock = pygame.time.Clock()
@@ -91,22 +91,23 @@ clock = pygame.time.Clock()
 """ ******************* """
 
 def new_patrol_subtarget(id_param, center):
+    # center[0] keeps the row value, center[1] keeps the column value
     
     graph_for_UAV[id_param] = GridWorld(X_DIM, Y_DIM)  
-    static_obs_cells = graph_for_UAV[id_param].get_static_obs_cells()
+    static_obs_coords = graph_for_UAV[id_param].get_static_obs_coords()
     k_m[id_param] = 0
     starting_point_for_UAV[id_param] = current_position_for_UAV[id_param]
 
-    new_target_x = randint(center[0] - math.floor(subarea_length/2), center[0] + math.floor(subarea_length/2))
-    new_target_y = randint(center[1] - math.floor(subarea_width/2), center[1] + math.floor(subarea_width/2))
+    new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
+    new_target_y = randint(center[1] - math.floor(subarea_ydim/2), center[1] + math.floor(subarea_ydim/2))
     
     while new_target_x not in range(X_DIM): # get new x coordinate for target if the given surpasses map dimensions
-        new_target_x = randint(center[0] - math.floor(subarea_length/2), center[0] + math.floor(subarea_length/2))
+        new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
     while new_target_y  not in range(Y_DIM): # get new y coordinate for target if the given surpasses map dimensions
-        new_target_y = randint(center[1] - math.floor(subarea_width/2), center[1] + math.floor(subarea_width/2))
-    while [new_target_x, new_target_y] in static_obs_cells: #if new target is an obstacle cell, corresponding to a static obstacle
-        new_target_x = randint(center[0] - math.floor(subarea_length/2), center[0] + math.floor(subarea_length/2))
-        new_target_y = randint(center[1] - math.floor(subarea_width/2), center[1] + math.floor(subarea_width/2))
+        new_target_y = randint(center[1] - math.floor(subarea_ydim/2), center[1] + math.floor(subarea_ydim/2))
+    while [new_target_x, new_target_y] in static_obs_coords: #if new target is an obstacle cell, corresponding to a static obstacle
+        new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
+        new_target_y = randint(center[1] - math.floor(subarea_ydim/2), center[1] + math.floor(subarea_ydim/2))
     
     new_target = [new_target_x, new_target_y]
     target_point_for_UAV[id_param] = coordsToStateName(new_target)
@@ -121,17 +122,17 @@ def new_patrol_subtarget(id_param, center):
     pos_coords[id_param] = stateNameToCoords(current_position_for_UAV[id_param])
 
 def target_overheated_point(id_param, overheat_sensed_at):
-    global extra_obs_cells
+    global extra_obs_coords
     graph_for_UAV[id_param] = GridWorld(X_DIM, Y_DIM)
-    static_obs_cells = graph_for_UAV[id_param].get_static_obs_cells()
-    extra_obs_cells = graph_for_UAV[id_param].set_and_get_extra_obs()
+    static_obs_coords = graph_for_UAV[id_param].get_static_obs_coords()
+    extra_obs_coords = graph_for_UAV[id_param].set_and_get_extra_obs()
     k_m[id_param] = 0
     starting_point_for_UAV[id_param] = current_position_for_UAV[id_param]
 
     target_point_for_UAV[id_param] = overheat_sensed_at
     target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
 
-    if target_coords[id_param] in static_obs_cells or target_coords[id_param] in extra_obs_cells:
+    if target_coords[id_param] in static_obs_coords or target_coords[id_param] in extra_obs_coords:
         raise Exception("this location corresponds to an obstacle, try giving a different one")
 
     target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
@@ -243,7 +244,7 @@ if __name__ == "__main__":
 
     # assing patrol areas to swarm drones
     on_patrol_population, x_divider, y_divider = calculate_on_patrol_population(swarmPopulation, sensed_overheat)
-    patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
+    patrol_centers, subarea_xdim, subarea_ydim = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
     UAVs_assigned_to_areas, on_detect_UAVS = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, "no detected overheat yet")
 
     basicfont = pygame.font.SysFont('Comic Sans MS', 16)
@@ -258,7 +259,7 @@ if __name__ == "__main__":
             print("detected overheat")
             on_patrol_population, x_divider, y_divider = calculate_on_patrol_population(swarmPopulation, sensed_overheat)
             del(patrol_centers)
-            patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
+            patrol_centers, subarea_xdim, subarea_ydim = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
             del(UAVs_assigned_to_areas)
             del(on_detect_UAVS)
             UAVs_assigned_to_areas, on_detect_UAVS = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at )
@@ -283,14 +284,14 @@ if __name__ == "__main__":
                 sensed_overheat = False
                 on_patrol_population, x_divider, y_divider = calculate_on_patrol_population(swarmPopulation, sensed_overheat)
                 del(patrol_centers)
-                patrol_centers, subarea_length, subarea_width = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
+                patrol_centers, subarea_xdim, subarea_ydim = split_grid_for_patrol(x_divider, y_divider, X_DIM, Y_DIM)
                 del(UAVs_assigned_to_areas)
                 for ID in on_detect_UAVS:
                     # print("UAV" + str(ID) +" not anymore on detect mode")
                     rospy.set_param("mode" + str(ID), "patrol")
                 del(on_detect_UAVS)
                 UAVs_assigned_to_areas, on_detect_UAVS = assign_coverage_area_to_UAVs(swarmPopulation, on_patrol_population, patrol_centers, sensed_overheat, overheat_sensed_at )
-                extra_obs_cells = []
+                extra_obs_coords = []
 
         for ID in range(swarmPopulation):
             if reached_waypoint_for_UAV[ID] and not made_it[ID]:
@@ -363,7 +364,7 @@ if __name__ == "__main__":
                 node_name = 'x' + str(column) + 'y' + str(row)
                 for ID in range(swarmPopulation):
                     if graph_for_UAV[ID].cells[row][column] == -1: # if there is an obstacle for any UAV (every UAV is considered as an obstacle to the others)
-                        if [row, column] not in extra_obs_cells: # if this is an obstacle only on detect mode, color it light green
+                        if [column, row] not in extra_obs_coords: # if this is an obstacle only on detect mode, color it light green
                             pygame.draw.rect(screen, colors[graph_for_UAV[ID].cells[row][column]], [(MARGIN + WIDTH) * column + MARGIN - WIDTH / 2, (MARGIN + HEIGHT) * row + MARGIN - HEIGHT / 2, WIDTH, HEIGHT])
                             node_name = 'x' + str(column) + 'y' + str(row)
                         else:
