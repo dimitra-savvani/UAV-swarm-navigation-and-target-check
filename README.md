@@ -8,5 +8,5 @@ Drones swarm covers forest area and checks ordered points to detect if a fire ha
 
 * [D_star_navigation_for fire detection](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/D_star_mul_iris_drones.md)
 
-D_star navigation is based on git repository [d-star-lite](https://github.com/mdeyo/d-star-lite)
+D_star navigation is based on the git repository [d-star-lite](https://github.com/mdeyo/d-star-lite)
 
