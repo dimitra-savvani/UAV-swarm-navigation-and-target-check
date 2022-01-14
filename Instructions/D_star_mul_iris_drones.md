@@ -151,6 +151,6 @@ To simulate the detected overheat, on a second terminal run:
 rosparam set /overheat_sensed_at 'x<x_coordinate>y<y_coordinate>'
 ```
 instead of <x_coordinate> type a number between 0 and 69,     
-instead of <y_coordinate> type a number between 0 and 55.
+instead of <y_coordinate> type a number between 0 and 69.
 
 
