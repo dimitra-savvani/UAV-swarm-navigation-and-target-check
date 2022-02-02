@@ -11,14 +11,14 @@ catkin_create_pkg motion geometry_msgs mavros_msgs roscpp rospy sensor_msgs std_
 At the end of the `CMakeList.txt` (which is under the src/motion folder of your catkin workspace), add the following lines:
 
 ```
-add_executable(rand_walks src/rand_walks.cpp)
-target_link_libraries(rand_walks ${catkin_LIBRARIES})
-#add_dependencies(rand_walks  motion_generate_messages_cpp)
+add_executable(random_walks src/random_walks.cpp)
+target_link_libraries(random_walks ${catkin_LIBRARIES})
+#add_dependencies(random_walks  motion_generate_messages_cpp)
 ```
 
 ## Add and compile rand_walks.cpp file to your motion package:
 
-* Download [rand_walks.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/src/rand_walks.cpp) and place it under src/motion/src of your catkin workspace
+* Take [random_walks.cpp](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/src/random_walks.cpp) and place it under src/motion/src of your catkin workspace
 
 * On  a terminal run
 ```
@@ -28,7 +28,7 @@ catkin build
 
 ## Execute random walks with Iris drones on Gazebo
 
-Download or move (if you have already downloaded as described in [Inastall_and_test_multiple_Iris.md](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md)) the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder, and place it in the motion folder. 
+Place the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder in the motion folder. 
 
 Don' t forget to use the chmod command to make the scripts executable, e.g. $ chmod +x run_script.sh
 
@@ -49,45 +49,23 @@ bash mul_launch2.sh
 
 On a third terminal:
 
-* To run rand_walks node for a specific drone:
+* To run random_walks node for a specific drone:
 
 ```
 source ~/catkin_ws/devel/setup.bash
-rosrun motion rand_walks <number>
+rosrun motion random_walks <number>
 ```
 number could be any integer from 0 to 3.
 
-* or to run rand_walks node for all drones simultaneously: 
+* Alternatively you can run random_walks node for all drones simultaneously, with one command: 
 ```
-cd ~/catkin_ws/src/motion/scripts
-bash rand_walks.sh
+source ~/catkin_ws/devel/setup.bash
+roslaunch motion random_walks.launch 
 ```
+For that mace sure to place the [launch](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/launch) folder in the motion folder first. 
+
 *If you want to fly less drones you have to open rand_walks.sh script and comment out unwanted drones.
-If y
 
 ## plot random walks for drone 0 to 3
 
-* Plot node plots dynamically a drone 's path and its goal locations, so it is a prerequisite to have one or more drones executing rand_walks node. 
-
-* Download [plot.py](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/motion/src/plot.py) and place it under src/motion/src of your catkin workspace
-(don 't forget to change permissions in properties in order to make it executable)
-
-* To run plot node for a specific drone:
-
-On a terminal run: 
-```
-source ~/catkin_ws/devel/setup.bash
-rosrun motion plot.py <number>
-```
-number could be any integer from 0 to 3.
-
-* or to run plot node for all drones simultaneously:
-
-Asuming that you downloaded and made executable the scripts from the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder as described above.
-
-On a terminal run: 
-```
-cd ~/catkin_ws/src/motion/scripts
-bash plots.sh
-```
-*If you want to plot less drones you have to open rand_walks.sh script and comment out unwanted drones
+* Plot node plots dynamically a drone 's path and its goal locations, so it is a prerequisite to have one or more drones executing random_walks node. 
