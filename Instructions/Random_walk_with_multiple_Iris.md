@@ -66,6 +66,3 @@ For that mace sure to place the [launch](https://github.com/dimitra-savvani/ROS_
 
 *If you want to fly less drones you have to open rand_walks.sh script and comment out unwanted drones.
 
-## plot random walks for drone 0 to 3
-
-* Plot node plots dynamically a drone 's path and its goal locations, so it is a prerequisite to have one or more drones executing random_walks node. 
