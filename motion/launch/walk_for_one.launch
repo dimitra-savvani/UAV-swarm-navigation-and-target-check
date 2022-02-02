@@ -1,7 +1,7 @@
 <launch>
 
         <!-- declare swarm population -->
-        <param name="swarmPopulation" type="int" value="4" /> 
+        <param name="swarmPopulation" type="int" value="1" /> 
         <!-- If you want to change the swarm population, you have to modify also: -->
         <!--  -->
         <!-- 1) local_to_global_coords() function, in initiator.cpp of motion package -->
@@ -24,32 +24,34 @@
 
         <!-- declare initial mode for each UAV -->\
         <param name="mode0" type="str" value="patrol" />
-        <param name="mode1" type="str" value="patrol" />
-        <param name="mode2" type="str" value="patrol" />
-        <param name="mode3" type="str" value="patrol" />
 
        <!-- declare target where overheat is detected -->
         <param name="overheat_sensed_at" type="str" value="" />
 
         <!-- simiulation run -->
         <node pkg="motion"
-                type="mul_launch1.sh" name="run_mul_launch1"
+        type="one_launch1.sh" name="run_one_launch1"
+        output="screen"
+        />
+
+        <node pkg="motion"
+        type="one_launch2.sh" name="run_one_launch2"
+        output="screen"
+        />
+
+        <node pkg="motion"
+                type="initiator_walk_for_one.sh" name="run_initiator_walk_for_one"
                 output="screen"
         />
 
         <node pkg="motion"
-                type="mul_launch2.sh" name="run_mul_launch2"
+                type="main_walk_for_one.sh" name="run_main_walk_for_one"
                 output="screen"
         />
 
         <node pkg="motion"
-                type="initiators.sh" name="run_initiators"
-                output="screen"
-        />
-
-        <node pkg="motion"
-                type="main.sh" name="run_main"
-                output="screen"
+        type="plot_walk.sh" name="run_plot_walk"
+        output="screen"
         />
 
 </launch>

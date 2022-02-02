@@ -20,7 +20,7 @@
         />
 
         <node pkg="motion"
-        type="plots.sh" name="run_plots"
+        type="plot_no_d_star_walks.sh" name="run_plot_no_d_star_walks"
         output="screen"
         />
 

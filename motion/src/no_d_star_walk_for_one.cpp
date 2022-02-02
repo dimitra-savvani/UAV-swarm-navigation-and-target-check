@@ -26,7 +26,7 @@ geometry_msgs::PoseStamped global_target; // for ploting goal positions at plot.
 
 
 /* ******************* */
-/* CALLBSCKS */
+/* CALLBACKS */
 /* ******************* */
 
 // We create a simple callback which will save the current state of the autopilot 

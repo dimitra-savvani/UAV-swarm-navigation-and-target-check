@@ -39,7 +39,7 @@ def Dstar_to_ROS_coordinates(in_x, in_y, ID):
 
 def get_UAV_position(ID):
 
-    ROS_position_topic = "uav" + str(ID) + "/motion/position/global"
+    ROS_position_topic = "/motion/position/global"
 
     raw_ROS_current_point = rospy.wait_for_message(ROS_position_topic, PoseStamped, timeout=None) # Subscriber to `ROS_position_topic_for_UAV[i]` only for one time
     
@@ -59,7 +59,7 @@ def get_UAV_position(ID):
 
 def calculate_on_patrol_population(swarmPopulation, sensed_overheat):
 
-    breaker = False
+    """ breaker = False
 
     previous_divider = {}
     previous_divider["x"] = 1
@@ -91,7 +91,12 @@ def calculate_on_patrol_population(swarmPopulation, sensed_overheat):
         if breaker:
             break
         previous_divider["y"] = y_divider
-    on_patrol_population = x_divider*y_divider
+    on_patrol_population = x_divider*y_divider """
+
+    on_patrol_population = 1 
+    x_divider = 1
+    y_divider = 1
+
     return on_patrol_population, x_divider, y_divider
 
 

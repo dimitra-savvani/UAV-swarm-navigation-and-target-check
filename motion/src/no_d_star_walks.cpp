@@ -21,7 +21,7 @@ int target_y_UAV1 [5] = {12, 3, 4, -13, 23};
 int target_x_UAV2 [5] = {17, 3, -33, 23, -2};
 int target_y_UAV2 [5] = {-12, -20, 9, 12, 1};
 
-int target_x_UAV3 [5] = {-17, -13, 23, 17, 3};
+int target_x_UAV3 [5] = {-17, -21, 23, 17, 3};
 int target_y_UAV3 [5] = {-12, 23, 1, -3, 10};
 
 int target_x [5];

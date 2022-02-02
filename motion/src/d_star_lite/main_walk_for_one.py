@@ -9,7 +9,7 @@ import operator
 
 from graph import Node, Graph
 from grid import GridWorld
-from utils import *
+from utils_walk_for_one import *
 from d_star_lite import initDStarLite, moveAndRescan
 from motion.srv import on_target, on_targetResponse
 from motion.srv import new_point, new_pointResponse
@@ -31,6 +31,11 @@ LIGHTPURPLE= (153, 30, 153)
 
 colors = { 0: WHITE, 1: GREEN, -1: GRAY1, -2: GRAY2 }
 uav_colors = { 0: RED, 1: ORANGE, 2: LIGHTBLUE, 3: LIGHTPURPLE }
+
+# sequance of targets for plot
+target_x = [17, -12, 9, -33, -27]
+target_y = [14, 3, 21, 9, -27]
+target_iterator = 0
 
 # This sets the WIDTH and HEIGHT of each grid location
 WIDTH = 12
@@ -98,7 +103,7 @@ def new_patrol_subtarget(id_param, center):
     k_m[id_param] = 0
     starting_point_for_UAV[id_param] = current_position_for_UAV[id_param]
 
-    new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
+    """ new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
     new_target_y = randint(center[1] - math.floor(subarea_ydim/2), center[1] + math.floor(subarea_ydim/2))
     
     while new_target_x not in range(X_DIM): # get new x coordinate for target if the given surpasses map dimensions
@@ -109,10 +114,22 @@ def new_patrol_subtarget(id_param, center):
         new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
         new_target_y = randint(center[1] - math.floor(subarea_ydim/2), center[1] + math.floor(subarea_ydim/2))
     
-    new_target = [new_target_x, new_target_y]
+    new_target = [new_target_x, new_target_y] """
+
+    global target_x, target_y, target_iterator
+
+    target_point[id_param].pose.position.x = target_x[target_iterator]
+    target_point[id_param].pose.position.y = target_y[target_iterator]
+    target_point[id_param].pose.position.z = 8
+
+    if target_iterator < 4:
+        target_iterator += 1
+
+    new_target = ROS_to_Dstar_coordinates(target_point[id_param].pose.position.x, target_point[id_param].pose.position.y)
+
     target_point_for_UAV[id_param] = coordsToStateName(new_target)
     target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
-    target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
+    # target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
     print("new patrol target for UAV" + str(ID))
     print(target_point[id_param].pose.position)
     graph_for_UAV[id_param].setStart(starting_point_for_UAV[id_param]) # set initial UAV position for UAV, to its graph
@@ -203,11 +220,11 @@ if __name__ == "__main__":
         k_m.append(0) # initialize k+m for all UAVs to 0
         starting_point_for_UAV.append(coordsToStateName(get_UAV_position(ID))) # get initial position from each drone
         waypointer.append(waypointing(ID)) # create separate objects for every UAV's waypoint handler
-        waypoint_service = "uav" + str(ID) +  "/motion/position/global/waypoint"
+        waypoint_service = "/motion/position/global/waypoint"
         rospy.Service(waypoint_service, new_point, waypointer[ID].waypoint_handler)
     
         target_checker.append(reached_target_check(ID)) # create separate objects for every UAV's on_target handler
-        reached_target_check_service = "uav" + str(ID) +  "/motion/on_target"
+        reached_target_check_service = "/motion/on_target"
         rospy.Service(reached_target_check_service, on_target, target_checker[ID].on_target_handler)
 
     target_point_for_UAV = [] # 'x<x_coordinate>y<y_coordinate>'
@@ -220,7 +237,7 @@ if __name__ == "__main__":
         target_coords.append(stateNameToCoords(target_point_for_UAV[ID])) 
 
         target_point[ID] = Dstar_to_ROS_coordinates(target_coords[ID][0], target_coords[ID][1], ID)
-        target_point_topic = "uav" + str(ID) + "/motion/position/global/target"
+        target_point_topic = "/motion/position/global/target"
         target_pub.append(rospy.Publisher(target_point_topic, PoseStamped, queue_size=10))
 
     queue = []
@@ -231,6 +248,22 @@ if __name__ == "__main__":
         graph_for_UAV[i].setStart(starting_point_for_UAV[i]) # set initial UAV position for each drone, to its graph
   
         graph_for_UAV[i].setGoal(target_point_for_UAV[i]) # set the goal position for each drone, to its graph
+
+        ###### Publish first target
+
+        target_coords[i] = stateNameToCoords(target_point_for_UAV[i])
+
+        target_point[i] = Dstar_to_ROS_coordinates(target_coords[i][0], target_coords[i][1], i)
+
+        while True:
+            if target_pub[i].get_num_connections() > 0:
+                target_pub[i].publish(target_point[i])
+                print("sent target for UAV" + str(i))
+                break
+            else:
+                rate.sleep()
+
+        ######
         
         queue.append([]) # list of lists for queues of each UAV
 

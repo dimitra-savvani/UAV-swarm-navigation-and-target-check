@@ -3,7 +3,7 @@ import rospy
 from graph import Node, Graph
 from utils import locate_obstacles, extra_obstacles_for_detect_mode
 
-safeDistance = rospy.get_param("/safeDistance") # param /safeDistance declared in simulation.launch file of motion package
+obstacleRange = rospy.get_param("/obstacleRange") # param /obstacleRange declared in simulation.launch file of motion package
 
 class GridWorld(Graph):
     def __init__(self, x_dim, y_dim, connect8=True):
@@ -22,8 +22,8 @@ class GridWorld(Graph):
         obs = locate_obstacles()
         
         for obstacle in obs.keys():
-            for x in range(obs[obstacle].x - safeDistance, obs[obstacle].x + safeDistance + 1):
-                for y in range(obs[obstacle].y - safeDistance, obs[obstacle].y + safeDistance + 1):
+            for x in range(obs[obstacle].x - obstacleRange, obs[obstacle].x + obstacleRange + 1):
+                for y in range(obs[obstacle].y - obstacleRange, obs[obstacle].y + obstacleRange + 1):
                     self.cells[y][x] = -1
                     self.static_obs_coords.append([x,y])
 
@@ -89,8 +89,8 @@ class GridWorld(Graph):
         extra_obs_coords = []
 
         for obstacle in extra_obs.keys():
-            for x in range(extra_obs[obstacle].x - safeDistance, extra_obs[obstacle].x + safeDistance + 1):
-                for y in range(extra_obs[obstacle].y - safeDistance, extra_obs[obstacle].y + safeDistance + 1):
+            for x in range(extra_obs[obstacle].x - obstacleRange, extra_obs[obstacle].x + obstacleRange + 1):
+                for y in range(extra_obs[obstacle].y - obstacleRange, extra_obs[obstacle].y + obstacleRange + 1):
                     self.cells[y][x] = -1 # cells are measured in row and columns
                     extra_obs_coords.append([x,y])
         return  extra_obs_coords

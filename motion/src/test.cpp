@@ -79,12 +79,12 @@ class position_subscriber
     }
 };
 
-pair<int, int> check_for_collision(double safeDistance){
+pair<int, int> check_for_collision(double obstacleRange){
     for(int i = 0; i < num_of_positions_kept; i++){
         for(int j = 0; j < num_of_positions_kept; j++){
             if(global_position_of_UAVs[i].ID != global_position_of_UAVs[j].ID){
-                if(abs(global_position_of_UAVs[i].position.x - global_position_of_UAVs[j].position.x) < safeDistance+3){
-                    if(abs(global_position_of_UAVs[i].position.y - global_position_of_UAVs[j].position.y) < safeDistance+3){
+                if(abs(global_position_of_UAVs[i].position.x - global_position_of_UAVs[j].position.x) < obstacleRange+3){
+                    if(abs(global_position_of_UAVs[i].position.y - global_position_of_UAVs[j].position.y) < obstacleRange+3){
                         return make_pair(global_position_of_UAVs[i].ID, global_position_of_UAVs[j].ID);
                     }
                 }
@@ -102,8 +102,8 @@ int main(int argc, char **argv)
     int swarmPopulation;
     if (ros::param::get("/swarmPopulation", swarmPopulation)){} // param /swarmPopulation declared in simulation.launch file of motion package
 
-    double safeDistance;
-    if (ros::param::get("/safeDistance", safeDistance)){} // param /safeDistance declared in simulation.launch file of motion package
+    double obstacleRange;
+    if (ros::param::get("/obstacleRange", obstacleRange)){} // param /obstacleRange declared in simulation.launch file of motion package
 
 
     // array of position_subscriber objects
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 
     while(ros::ok()){
 
-        pair<int, int> UAVS_to_collide = check_for_collision(safeDistance); //when it returns different values(hench not (0, 0), there is a collision detected)
+        pair<int, int> UAVS_to_collide = check_for_collision(obstacleRange); //when it returns different values(hench not (0, 0), there is a collision detected)
 
         expecting_collision = (UAVS_to_collide.first != UAVS_to_collide.second) ? true : false; 
 

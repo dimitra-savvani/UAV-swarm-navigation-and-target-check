@@ -32,6 +32,21 @@ LIGHTPURPLE= (153, 30, 153)
 colors = { 0: WHITE, 1: GREEN, -1: GRAY1, -2: GRAY2 }
 uav_colors = { 0: RED, 1: ORANGE, 2: LIGHTBLUE, 3: LIGHTPURPLE }
 
+# sequance of targets for 
+target_x = []
+target_y = []
+target_x.append([17, 2, 26, -24, -8])
+target_x.append([-17, -20, 23, 12, 1])
+target_x.append([17, 3, -33, 23, -2])
+target_x.append([-17, -21, 23, 17, 3])
+
+target_y.append([12, -20, 27, 18, -3])
+target_y.append([12, 3, 4, -13, 23])
+target_y.append([-12, -20, 9, 12, 1])
+target_y.append([-12, 23, 1, -3, 10])
+
+target_iterator = [0]*4
+
 # This sets the WIDTH and HEIGHT of each grid location
 WIDTH = 12
 HEIGHT = 12
@@ -98,7 +113,7 @@ def new_patrol_subtarget(id_param, center):
     k_m[id_param] = 0
     starting_point_for_UAV[id_param] = current_position_for_UAV[id_param]
 
-    new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
+    """ new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
     new_target_y = randint(center[1] - math.floor(subarea_ydim/2), center[1] + math.floor(subarea_ydim/2))
     
     while new_target_x not in range(X_DIM): # get new x coordinate for target if the given surpasses map dimensions
@@ -109,10 +124,22 @@ def new_patrol_subtarget(id_param, center):
         new_target_x = randint(center[0] - math.floor(subarea_xdim/2), center[0] + math.floor(subarea_xdim/2))
         new_target_y = randint(center[1] - math.floor(subarea_ydim/2), center[1] + math.floor(subarea_ydim/2))
     
-    new_target = [new_target_x, new_target_y]
+    new_target = [new_target_x, new_target_y] """
+
+    global target_x, target_y, target_iterator
+
+    target_point[id_param].pose.position.x = target_x[id_param][target_iterator[id_param]]
+    target_point[id_param].pose.position.y = target_y[id_param][target_iterator[id_param]]
+    target_point[id_param].pose.position.z = 8
+
+    if target_iterator[id_param] < 4:
+        target_iterator[id_param] += 1
+
+    new_target = ROS_to_Dstar_coordinates(target_point[id_param].pose.position.x, target_point[id_param].pose.position.y)
+
     target_point_for_UAV[id_param] = coordsToStateName(new_target)
     target_coords[id_param] = stateNameToCoords(target_point_for_UAV[id_param])
-    target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
+    # target_point[id_param] = Dstar_to_ROS_coordinates(target_coords[id_param][0], target_coords[id_param][1], id_param)
     print("new patrol target for UAV" + str(ID))
     print(target_point[id_param].pose.position)
     graph_for_UAV[id_param].setStart(starting_point_for_UAV[id_param]) # set initial UAV position for UAV, to its graph
@@ -231,6 +258,22 @@ if __name__ == "__main__":
         graph_for_UAV[i].setStart(starting_point_for_UAV[i]) # set initial UAV position for each drone, to its graph
   
         graph_for_UAV[i].setGoal(target_point_for_UAV[i]) # set the goal position for each drone, to its graph
+        
+        ###### Publish first target
+
+        target_coords[i] = stateNameToCoords(target_point_for_UAV[i])
+
+        target_point[i] = Dstar_to_ROS_coordinates(target_coords[i][0], target_coords[i][1], i)
+
+        while True:
+            if target_pub[i].get_num_connections() > 0:
+                target_pub[i].publish(target_point[i])
+                print("sent target for UAV" + str(i))
+                break
+            else:
+                rate.sleep()
+
+        ######
         
         queue.append([]) # list of lists for queues of each UAV
 

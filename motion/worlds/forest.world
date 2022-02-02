@@ -126,7 +126,7 @@
     <include>
       <name>Oak Tree1</name>
       <uri>model://fire_hydrant</uri>
-      <pose> 32 30 0 0 0 0</pose>
+      <pose> -42 -2 0 0 0 0</pose>
     </include>
 
     <!-- person walking -->
@@ -159,11 +159,11 @@
 
     <!-- fire_station -->
 
-    <include>
+    <!-- <include>
       <name>fire_station</name>
       <uri>model://fire_station</uri>
-      <pose>-38 25 0 0 0 -1.5708</pose>
-    </include>
+      <pose>-40 25 0 0 0 -1.5708</pose>
+    </include> -->
 
     <!-- fire_truck -->
 
@@ -593,6 +593,12 @@
 
     <include>
       <name>soil box70</name>
+      <uri>model://mud_box</uri>
+      <pose>-40 24 -0.2 0 0 1.5708</pose>
+    </include>
+
+    <include>
+      <name>soil box71</name>
       <uri>model://mud_box</uri>
       <pose>-40 32 -0.2 0 0 1.5708</pose>
     </include>

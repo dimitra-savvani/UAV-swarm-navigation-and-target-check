@@ -48,8 +48,13 @@
         />
 
         <node pkg="motion"
-                type="main.sh" name="run_main"
+                type="main_walks.sh" name="run_main_walks"
                 output="screen"
+        />
+
+        <node pkg="motion"
+        type="plot_walks.sh" name="run_plot_walks"
+        output="screen"
         />
 
 </launch>

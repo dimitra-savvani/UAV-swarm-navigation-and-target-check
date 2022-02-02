@@ -15,12 +15,12 @@
         />
 
         <node pkg="motion"
-        type="no_d_star_walks_for_one.sh" name="run_no_d_star_walks_for_one"
+        type="no_d_star_walk_for_one.sh" name="run_no_d_star_walk_for_one"
         output="screen"
         />
 
         <node pkg="motion"
-        type="one_plot.sh" name="run_one_plot"
+        type="plot_no_d_star_walk.sh" name="run_plot_no_d_star_walk"
         output="screen"
         />
 
