@@ -161,16 +161,18 @@ cd ~/src/Firmware;source ~/catkin_ws/devel/setup.bash;source Tools/setup_gazebo.
 ```
 (Alternatively, for commands on terminal 1 and 2)
 
-Asuming that you have downloaded and made executable the scripts from [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder as described above.
+Place the [scripts](https://github.com/dimitra-savvani/ROS_multiple_iris/tree/main/motion/scripts) folder in the motion folder. 
+
+Don' t forget to use the chmod command to make the scripts executable, e.g. $ chmod +x run_script.sh
 
 On Terminal 1:
 ```
-cd ~/scripts
+cd ~/catkin_ws/src/motion/scripts
 bash mul_launch1.sh
 ```
 
 On Terminal 2:
 ```
-cd ~/scripts
+cd ~/catkin_ws/src/motion/scripts
 bash mul_launch2.sh
 ```
