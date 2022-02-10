@@ -181,6 +181,7 @@ def animate(i):
     plt.scatter(x_goal_list, y_goal_list, label="Goal_locations", color = 'firebrick')
     plt.scatter([-31, -31, -31],[-28, -10, 8], label = "Tall obstacles", color = 'g', marker='^')
     plt.scatter(27,-28, label = "Short obstacles", color = 'aquamarine', marker='^')
+    plt.grid()
     annotate_current_goal()
     plt.legend(loc="upper right")
     
