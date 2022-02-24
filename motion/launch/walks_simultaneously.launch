@@ -1,0 +1,57 @@
+<launch>
+
+        <!-- declare swarm population -->
+        <param name="swarmPopulation" type="int" value="4" /> 
+        <!-- If you want to change the swarm population, you have to modify also: -->
+        <!--  -->
+        <!-- 1) local_to_global_coords() function, in initiator.cpp of motion package -->
+        <!-- 2) add or remove colors from uav_colors dictionary, in main.py of motion package -->
+        <!-- 3) add_sdf.launch file, which is located under ~/src/Firmware/launch -->
+        <!-- 4) initiators.sh, which is located under scripts directory, in motion package -->
+        <!-- 5) add or remove corresponding modes in this file, below -->
+
+        <!-- declare flight height for swarm to fly -->
+        <param name="patrolHeight" type="double" value="8" />
+
+        <!-- declare flight height for swarm to fly -->
+        <param name="overheatHeight" type="double" value="6" />
+
+        <!-- declare obstacle range -->
+        <param name="obstacleRange" type="int" value="1" />
+
+        <!-- declare declare distance from which UAVs detect target and obstacles -->
+        <param name="detectionDistance" type="double" value="3" />
+
+        <!-- declare initial mode for each UAV -->\
+        <param name="mode0" type="str" value="patrol" />
+        <param name="mode1" type="str" value="patrol" />
+        <param name="mode2" type="str" value="patrol" />
+        <param name="mode3" type="str" value="patrol" />
+
+       <!-- declare target where overheat is detected -->
+        <param name="overheat_sensed_at" type="str" value="" />
+
+        <!-- simiulation run -->
+        <node pkg="motion"
+                type="mul_launch1.sh" name="run_mul_launch1"
+                output="screen"
+        />
+
+        <node pkg="motion"
+                type="mul_launch2.sh" name="run_mul_launch2"
+                output="screen"
+        />
+
+        <node pkg="motion"
+                type="initiators.sh" name="run_initiators"
+                output="screen"
+        />
+
+        <node pkg="motion"
+                type="main_walks.sh" name="run_main_walks"
+                output="screen"
+        />
+
+        <node name="run_plot_walks_onePlot" pkg="motion" type="plot_walks_onePlot.sh" output="screen"/>
+
+</launch>

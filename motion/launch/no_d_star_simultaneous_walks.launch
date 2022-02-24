@@ -1,0 +1,24 @@
+<launch> 
+   
+        <!-- declare flight height for swarm to fly -->
+        <param name="patrolHeight" type="double" value="8" />
+
+        <!-- simiulation run -->
+        <node pkg="motion"
+        type="mul_launch1.sh" name="run_mul_launch1"
+        output="screen"
+        />
+
+        <node pkg="motion"
+        type="mul_launch2.sh" name="run_mul_launch2"
+        output="screen"
+        />
+
+        <node pkg="motion"
+        type="no_d_star_walks.sh" name="run_no_d_star_walks"
+        output="screen"
+        />
+
+        <node name="run_plot_no_d_star_walks_onePlot" pkg="motion" type="plot_no_d_star_walks_onePlot.sh" output="screen"/>
+
+</launch> 
