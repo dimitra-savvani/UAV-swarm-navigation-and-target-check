@@ -1,6 +1,6 @@
 # ROS_multiple_iris
 
-Drones swarm covers forest area and checks ordered points to detect if a fire has started.
+Swarm of drones covers forest area and checks ordered points to detect if a fire has started.
 
 * [Installation instructions](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md) 
 
