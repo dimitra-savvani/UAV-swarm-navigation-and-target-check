@@ -1,6 +1,8 @@
 # ROS_multiple_iris
 
-A project developed mainly with Python and C++ using the ROS framework. A swarm of drones surveils a forest area and checks multiple locations to detect whether a fire has started. Following are instructions for installing and checking its features.
+* A project developed mainly with Python and C++ using the ROS framework. 
+* A swarm of drones surveils a forest area and checks multiple locations to detect whether a fire has started.
+* Following are some instructions for installing and checking its features.
 
 * [Installation instructions](https://github.com/dimitra-savvani/ROS_multiple_iris/blob/main/Instructions/Inastall_and_test_multiple_Iris.md) 
 
